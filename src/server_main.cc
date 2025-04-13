@@ -42,10 +42,27 @@ private:
   {
     if (!error)
     {
-      boost::asio::async_write(socket_,
-          boost::asio::buffer(data_, bytes_transferred),
-          boost::bind(&session::handle_write, this,
-            boost::asio::placeholders::error));
+      // check if the incoming request starts with "GET"
+      std::string request(data_, bytes_transferred);
+      if (request.find("GET") == 0) {
+        //  proper HTTP response:
+        const char* http_response = // change this to your desired response
+          "HTTP/1.1 200 OK\r\n"
+          "Content-Type: text/plain\r\n"
+          "Content-Length: 5\r\n\r\n"
+          "Hello";
+        size_t response_length = strlen(http_response);
+        boost::asio::async_write(socket_,
+            boost::asio::buffer(http_response, response_length),
+            boost::bind(&session::handle_write, this,
+              boost::asio::placeholders::error));
+      } else {
+        // if not an HTTP GET, echo back or handle differently
+        boost::asio::async_write(socket_,
+            boost::asio::buffer(data_, bytes_transferred),
+            boost::bind(&session::handle_write, this,
+              boost::asio::placeholders::error));
+      }
     }
     else
     {

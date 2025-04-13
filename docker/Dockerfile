@@ -1,6 +1,6 @@
 ### Build/test container ###
 # Define builder stage
-FROM name-not-found-404:base as builder
+FROM name-not-found-404:base AS builder
 
 # Share work directory
 COPY . /usr/src/project
@@ -14,18 +14,19 @@ RUN ctest --output-on_failure
 
 ### Deploy container ###
 # Define deploy stage
-FROM ubuntu:noble as deploy
+FROM ubuntu:noble AS deploy
 
-# TODO(!): Copy server output binary to "."
-# COPY --from=builder /usr/src/project/build/bin/example_server .
+# Copy server output binary to "."
+COPY --from=builder /usr/src/project/build/bin/server .
+COPY --from=builder /usr/src/project/config/default.config .
 
-# TODO(!): Expose some port(s)
-# EXPOSE 80
+# Expose some port(s)
+EXPOSE 80
 
 # Use ENTRYPOINT to specify the binary name
-# TODO(!): Update with real server name
-# ENTRYPOINT ["./example_server"]
+# Update with real server name
+ENTRYPOINT ["./server"]
 
 # Use CMD to specify arguments to ENTRYPOINT
-# TODO(!): Update with real server args
-# CMD [""]
+# Update with real server args
+CMD ["default.config"]
