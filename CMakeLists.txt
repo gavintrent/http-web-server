@@ -37,6 +37,7 @@ include_directories(include)
 # libraries go under here
 add_library(server_lib src/server_main.cc)
 add_library(config_parser_lib src/config_parser.cc)
+#add_library(echo_handler_lib src/echo_handler.cc)
 
 # executables go under here
 add_executable(server src/server_main.cc)
@@ -45,7 +46,11 @@ target_link_libraries(server server_lib Boost::system)
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib gtest_main)
 
+#add_executable(echo_handler_test tests/echo_handler_test.cc)
+#target_link_libraries(echo_handler_test echo_handler_lib gtest_main)
+
 
 # tests go under here
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+#gtest_discover_tests(echo_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
