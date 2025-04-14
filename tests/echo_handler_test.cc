@@ -1,3 +1,5 @@
+#include <boost/lexical_cast.hpp>
+
 #include <gtest/gtest.h>
 #include "echo_handler.h"
 
@@ -5,7 +7,8 @@
 TEST(EchoHandlerTest, ReturnsRequestAsBody) {
     std::string raw_request = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
     EchoHandler handler;
-    std::string response = handler.HandleRequest(raw_request);
+    boost::system::error_code error;
+    std::string response = boost::lexical_cast<std::string>(handler.HandleRequest(error, raw_request.c_str(), raw_request.size()));
 
     EXPECT_TRUE(response.find("HTTP/1.1 200 OK") != std::string::npos);
     EXPECT_TRUE(response.find("Content-Type: text/plain") != std::string::npos);
@@ -16,7 +19,8 @@ TEST(EchoHandlerTest, ReturnsRequestAsBody) {
 TEST(EchoHandlerTest, CorrectContentLength) {
     std::string raw_request = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
     EchoHandler handler;
-    std::string response = handler.HandleRequest(raw_request);
+    boost::system::error_code error;
+    std::string response = boost::lexical_cast<std::string>(handler.HandleRequest(error, raw_request.c_str(), raw_request.size()));
     
     // Extract the Content-Length value from the response
     size_t content_length_pos = response.find("Content-Length: ");
@@ -33,7 +37,8 @@ TEST(EchoHandlerTest, CorrectContentLength) {
 TEST(EchoHandlerTest, HandlesSpecialCharacters) {
     std::string raw_request = "GET /search?q=hello%20world&lang=en HTTP/1.1\r\nHost: localhost\r\n\r\n";
     EchoHandler handler;
-    std::string response = handler.HandleRequest(raw_request);
+    boost::system::error_code error;
+    std::string response = boost::lexical_cast<std::string>(handler.HandleRequest(error, raw_request.c_str(), raw_request.size()));
     
     EXPECT_TRUE(response.find("HTTP/1.1 200 OK") != std::string::npos);
     EXPECT_TRUE(response.find(raw_request) != std::string::npos);
