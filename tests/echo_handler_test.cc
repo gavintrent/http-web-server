@@ -43,3 +43,13 @@ TEST(EchoHandlerTest, HandlesSpecialCharacters) {
     EXPECT_TRUE(response.find("HTTP/1.1 200 OK") != std::string::npos);
     EXPECT_TRUE(response.find(raw_request) != std::string::npos);
 }
+
+// test non-GET request
+TEST(EchoHandlerTest, NonGETRequest) {
+    std::string raw_request = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\n";
+    EchoHandler handler;
+    boost::system::error_code error;
+    std::string response = boost::lexical_cast<std::string>(handler.HandleRequest(error, raw_request.c_str(), raw_request.size()));
+    
+    EXPECT_TRUE(response.find("HTTP/1.1 400 Bad Request") != std::string::npos);
+}

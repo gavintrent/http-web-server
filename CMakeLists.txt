@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.10.0)
 project(name-not-found-404)
 
+# enable coverage flags
+option(ENABLE_COVERAGE "Enable coverage flags" OFF)
+if(ENABLE_COVERAGE)
+  add_compile_options(-O0 -g --coverage)
+  link_libraries(--coverage)
+endif()
+
 # Make sure developers do not run cmake in the main project directory, to keep
 # build artifacts from becoming clutter
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
@@ -40,6 +47,8 @@ add_library(server_lib src/server.cc)
 add_library(session_lib src/session.cc)
 add_library(config_parser_lib src/config_parser.cc)
 add_library(echo_handler_lib src/echo_handler.cc)
+add_library(request_parser_lib src/request_parser.cc)
+add_library(response_builder_lib src/response_builder.cc)
 
 # executables go under here
 add_executable(server src/server_main.cc)
@@ -51,11 +60,31 @@ target_link_libraries(config_parser_test config_parser_lib gtest_main)
 add_executable(echo_handler_test tests/echo_handler_test.cc)
 target_link_libraries(echo_handler_test echo_handler_lib gtest_main)
 
+add_executable(request_parser_test tests/request_parser_test.cc)
+target_link_libraries(request_parser_test request_parser_lib gtest_main)
+
+add_executable(response_builder_test tests/response_builder_test.cc)
+target_link_libraries(response_builder_test response_builder_lib gtest_main)
+
 
 # tests go under here
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(echo_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
-
+gtest_discover_tests(request_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(response_builder_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 # Update with target/test targets
 include(cmake/CodeCoverageReportConfig.cmake)
-generate_coverage_report(TARGETS server server_main_lib server_lib session_lib config_parser_lib echo_handler_lib TESTS config_parser_test echo_handler_test)
+generate_coverage_report(
+  TARGETS 
+    server
+    server_main_lib
+    server_lib 
+    session_lib 
+    config_parser_lib 
+    echo_handler_lib 
+  TESTS 
+    config_parser_test
+    echo_handler_test
+    request_parser_test
+    response_builder_test
+  )

@@ -1,4 +1,5 @@
 steps:
+# Build the base image
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
   args:
@@ -14,7 +15,10 @@ steps:
     '--cache-from', 'gcr.io/$PROJECT_ID/name-not-found-404:base',
     '.'
   ]
-- name: 'gcr.io/cloud-builders/docker'
+
+# Push the base image to GCR 
+- id: PushBase
+  name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/name-not-found-404:base']
 - name: 'gcr.io/cloud-builders/docker'
   args: [
@@ -23,4 +27,37 @@ steps:
     '-t', 'gcr.io/$PROJECT_ID/name-not-found-404:latest',
     '.'
   ]
+
+# Build the coverage image
+- id: Coverage
+  name: 'gcr.io/cloud-builders/docker'
+  waitFor: ['PushBase']
+  args:
+    [
+      'build',
+      '-f', 'docker/coverage.Dockerfile',
+      '-t', 'gcr.io/$PROJECT_ID/coverage',
+      '.'
+    ]
+
+# Run tests & print coverage summary
+- id: RunCoverage
+  name: 'gcr.io/$PROJECT_ID/coverage'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      set -e
+      # Configure & build with coverage flags
+      mkdir -p build && cd build
+      cmake -DENABLE_COVERAGE=ON ..
+      make -j$(nproc)
+      # Run tests
+      ctest --output-on-failure
+      # Print coverage summary
+      gcovr --root .. \
+            --exclude tests/ \
+            --print-summary
+
+# Images to push to container registry
 images: ['gcr.io/$PROJECT_ID/name-not-found-404:base', 'gcr.io/$PROJECT_ID/name-not-found-404:latest']
