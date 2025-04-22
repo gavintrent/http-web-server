@@ -88,3 +88,7 @@ generate_coverage_report(
     request_parser_test
     response_builder_test
   )
+
+# Bash integration test for the echo server
+add_test(NAME EchoServerIntegrationTest
+         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_test.sh)
