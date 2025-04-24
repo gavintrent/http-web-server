@@ -1,0 +1,7 @@
+[2025-04-24 21:17:34] [info] [Thread 0x00007dc7cbce1740] Starting server...
+[2025-04-24 21:17:34] [info] [Thread 0x00007dc7cbce1740] Parsed port: 8080
+[2025-04-24 21:17:34] [info] [Thread 0x00007dc7cbce1740] Server listening on port 8080
+[2025-04-24 21:17:35] [info] [Thread 0x00007dc7cbce1740] Received request from 127.0.0.1:41436
+[2025-04-24 21:17:35] [debug] [Thread 0x00007dc7cbce1740] Parsed request, sending response...
+[2025-04-24 21:17:35] [info] [Thread 0x00007dc7cbce1740] Successfully sent response to client.
+[2025-04-24 21:17:35] [warning] [Thread 0x00007dc7cbce1740] Read error: End of file

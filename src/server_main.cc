@@ -11,17 +11,22 @@
 #include <cstdlib>
 #include <iostream>
 #include <boost/asio.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "server.h"
 #include "config_parser.h"
+#include "logger.h"
 
 int main(int argc, char* argv[])
 {
   try
   {
+    init_logging();
+    BOOST_LOG_TRIVIAL(info) << "Starting server...";
+    
     if (argc != 2)
     {
-      std::cerr << "Usage: async_tcp_echo_server <config file>\n";
+      BOOST_LOG_TRIVIAL(error) << "Usage: async_tcp_echo_server <config file>";
       return 1;
     }
 
@@ -34,20 +39,24 @@ int main(int argc, char* argv[])
         config.statements_[0]->tokens_.size() != 2u || //assume first statement of config contains port
         config.statements_[0]->tokens_[0] != "listen"
     ) {
-      std::cerr << "Error parsing config\n";
+      BOOST_LOG_TRIVIAL(error) << "Error parsing config\n";
       return 1;
     }
     
     using namespace std; // For stoi.
     int port = stoi(config.statements_[0]->tokens_[1]);
+    BOOST_LOG_TRIVIAL(info) << "Parsed port: " << port;
+
     server s(io_service, port);
+    BOOST_LOG_TRIVIAL(info) << "Server listening on port " << port;
 
     io_service.run();
   }
   catch (std::exception& e)
   {
-    std::cerr << "Exception: " << e.what() << "\n";
+    BOOST_LOG_TRIVIAL(fatal) << "Unhandled exception: " << e.what();
   }
 
+  BOOST_LOG_TRIVIAL(info) << "Server shutting down.";
   return 0;
 }
