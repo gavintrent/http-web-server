@@ -1,19 +1,18 @@
 #ifndef ECHO_HANDLER_H
 #define ECHO_HANDLER_H
+#include <boost/system/error_code.hpp>
+#include <string>
+#include <map>
 
-#include <cstdlib>
-#include <iostream>
-#include <boost/asio.hpp>
-#include <boost/beast/http.hpp>
+#include "request_handler.h"
+#include "response_builder.h"
 
-namespace http = boost::beast::http;
-
-class EchoHandler {
-  public:
-    EchoHandler() {}
-    http::response<http::string_body> HandleRequest(boost::system::error_code& parser_error, 
-                                   const char *data, 
-                                   size_t bytes_transferred 
-    );
+/// Serves `/echo` URLs by echoing back the request body.
+class EchoHandler : public RequestHandler {
+public:
+  HttpResponse handleRequest(const HttpRequest& req) override {
+    return ResponseBuilder::echo(req);
+  }
 };
+
 #endif

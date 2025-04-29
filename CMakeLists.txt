@@ -53,13 +53,13 @@ add_library(logger_lib src/logger.cc)
 
 # executables go under here
 add_executable(server src/server_main.cc)
-target_link_libraries(server logger_lib server_main_lib server_lib session_lib config_parser_lib echo_handler_lib Boost::log_setup Boost::log Boost::system Boost::regex)
+target_link_libraries(server logger_lib server_main_lib server_lib session_lib config_parser_lib echo_handler_lib request_parser_lib response_builder_lib Boost::log_setup Boost::log Boost::system Boost::regex)
 
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib gtest_main)
 
 add_executable(echo_handler_test tests/echo_handler_test.cc)
-target_link_libraries(echo_handler_test echo_handler_lib gtest_main)
+target_link_libraries(echo_handler_test echo_handler_lib request_parser_lib response_builder_lib gtest_main)
 
 add_executable(request_parser_test tests/request_parser_test.cc)
 target_link_libraries(request_parser_test request_parser_lib gtest_main)

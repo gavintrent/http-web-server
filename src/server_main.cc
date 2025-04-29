@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     }
 
     boost::asio::io_service io_service;
+    auto echo_handler = std::make_shared<EchoHandler>();
 
     //parse argument as config file
     NginxConfigParser parser;
@@ -47,7 +48,26 @@ int main(int argc, char* argv[])
     int port = stoi(config.statements_[0]->tokens_[1]);
     BOOST_LOG_TRIVIAL(info) << "Parsed port: " << port;
 
-    server s(io_service, port);
+    // based on what is in the config, build a vector to know which handler to use
+    using HandlerPtr = std::shared_ptr<RequestHandler>;
+    std::vector<std::pair<std::string,HandlerPtr>> routes;
+    for (auto& stmt : config.statements_) {
+      if (stmt->tokens_[0] == "location" &&
+          stmt->tokens_.size() >= 2)
+      {
+        std::string prefix = stmt->tokens_[1];
+        if (prefix.back()==';') prefix.pop_back();
+        // only support echo for now, add static later on
+        if (prefix == "/echo") {
+          routes.emplace_back(
+            prefix,
+            std::make_shared<EchoHandler>()
+          );
+        }
+      }
+    }
+
+    server srv(io_service, port, routes);
     BOOST_LOG_TRIVIAL(info) << "Server listening on port " << port;
 
     io_service.run();
