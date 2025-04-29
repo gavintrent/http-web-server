@@ -12,7 +12,7 @@ namespace http = boost::beast::http;
 #include "session.h"
 #include "echo_handler.h"
 
-session::session(boost::asio::io_service& io_service, const std::vector<std::pair<std::string,std::shared_ptr<RequestHandler>>>& routes)
+session::session(boost::asio::io_service& io_service, const std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>>& routes)
   : socket_(io_service),
   routes_(routes)
 {
@@ -45,8 +45,9 @@ void session::handle_read(const boost::system::error_code& ec,
     app_res.body        = "Bad Request";
   } else {
         bool handled = false;
-    for (auto& [prefix, handler] : routes_) {
-      if (req.path.rfind(prefix, 0) == 0) {
+    for (auto& [prefix, new_prefix, handler] : routes_) {
+      if (req.path.find(prefix, 0) == 0) {
+        req.path.replace(0, prefix.length(), new_prefix);
         app_res = handler->handleRequest(req);
         handled = true;
         break;

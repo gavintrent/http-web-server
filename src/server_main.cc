@@ -12,6 +12,7 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/log/trivial.hpp>
+#include <map>
 
 #include "server.h"
 #include "config_parser.h"
@@ -32,7 +33,7 @@ int main(int argc, char* argv[])
 
     boost::asio::io_service io_service;
     auto echo_handler = std::make_shared<EchoHandler>();
-
+    
     //parse argument as config file
     NginxConfigParser parser;
     NginxConfig config;
@@ -50,7 +51,7 @@ int main(int argc, char* argv[])
 
     // based on what is in the config, build a vector to know which handler to use
     using HandlerPtr = std::shared_ptr<RequestHandler>;
-    std::vector<std::pair<std::string,HandlerPtr>> routes;
+    std::vector<std::tuple<std::string,std::string,HandlerPtr>> routes;
     for (auto& stmt : config.statements_) {
       if (stmt->tokens_[0] == "location" &&
           stmt->tokens_.size() >= 2)
@@ -60,8 +61,16 @@ int main(int argc, char* argv[])
         // only support echo for now, add static later on
         if (prefix == "/echo") {
           routes.emplace_back(
-            prefix,
+            "/echo",
+            "/",
             std::make_shared<EchoHandler>()
+          );
+        }
+        else {
+          routes.emplace_back(
+            prefix,
+            stmt->tokens_[2],
+            std::make_shared<StaticHandler>()
           );
         }
       }

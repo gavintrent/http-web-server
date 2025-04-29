@@ -12,13 +12,14 @@ using boost::asio::ip::tcp;
 namespace http = boost::beast::http;
 
 #include "echo_handler.h"
+#include "static_handler.h"
 #include "request_parser.h" 
 #include "request_handler.h"
 
 class session
 {
 public:
-  session(boost::asio::io_service& io_service, const std::vector<std::pair<std::string,std::shared_ptr<RequestHandler>>>& routes);
+  session(boost::asio::io_service& io_service, const std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>>& routes);
   tcp::socket& socket();
   void start();
   
@@ -32,6 +33,6 @@ private:
   http::response<http::string_body> response;
   RequestParser parser_;
   RequestHandler* handler_;
-  std::vector<std::pair<std::string,std::shared_ptr<RequestHandler>>> routes_;
+  std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>> routes_;
 };
 #endif

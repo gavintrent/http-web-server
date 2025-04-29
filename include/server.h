@@ -15,7 +15,7 @@ class server
 public:
     server(boost::asio::io_service& io_service,
          short port,
-         const std::vector<std::pair<std::string,std::shared_ptr<RequestHandler>>>& routes);
+         const std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>>& routes);
 
 private:
   void start_accept();
@@ -23,6 +23,6 @@ private:
   
   boost::asio::io_service& io_service_;
   tcp::acceptor acceptor_;
-  std::vector<std::pair<std::string,std::shared_ptr<RequestHandler>>> routes_;
+  std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>> routes_;
 };
 #endif
