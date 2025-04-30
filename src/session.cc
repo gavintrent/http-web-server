@@ -14,7 +14,7 @@ namespace http = boost::beast::http;
 
 session::session(boost::asio::io_service& io_service, const std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>>& routes)
   : socket_(io_service),
-  routes_(routes)
+    routes_(routes)
 {
 }
 
@@ -34,17 +34,32 @@ void session::start()
 void session::handle_read(const boost::system::error_code& ec,
     size_t bytes_transferred)
 {
-  if (ec) return;
+  if (ec) {
+    BOOST_LOG_TRIVIAL(warning) << "Read error: " << ec.message();
+    delete this;
+    return;
+  }
+
+  try {
+    auto client_ip = socket_.remote_endpoint().address().to_string();
+    auto client_port = socket_.remote_endpoint().port();
+    BOOST_LOG_TRIVIAL(info) << "Received request from " << client_ip << ":" << client_port;
+  } catch (std::exception& e) {
+    BOOST_LOG_TRIVIAL(warning) << "Could not retrieve client address: " << e.what();
+  }
 
   boost::system::error_code parse_ec;
   auto req = parser_.parse(data_, bytes_transferred, parse_ec);
 
   HttpResponse app_res;
   if (parse_ec) {
+    BOOST_LOG_TRIVIAL(error) << "Failed to parse HTTP request: " << parse_ec.message();
     app_res.status_code = 400;
     app_res.body        = "Bad Request";
   } else {
-        bool handled = false;
+    BOOST_LOG_TRIVIAL(debug) << "Parsed request, routing...";
+
+    bool handled = false;
     for (auto& [prefix, new_prefix, handler] : routes_) {
       if (req.path.find(prefix, 0) == 0) {
         req.path.replace(0, prefix.length(), new_prefix);
@@ -54,6 +69,7 @@ void session::handle_read(const boost::system::error_code& ec,
       }
     }
     if (!handled) {
+      BOOST_LOG_TRIVIAL(info) << "No matching handler found for path: " << req.path;
       app_res.status_code = 404;
       app_res.body        = "Not Found";
     }
@@ -64,6 +80,8 @@ void session::handle_read(const boost::system::error_code& ec,
   response.body() = std::move(app_res.body);
   response.prepare_payload();
 
+  BOOST_LOG_TRIVIAL(debug) << "Sending response with status code: " << app_res.status_code;
+
   http::async_write(socket_, response,
     boost::bind(&session::handle_write, this,
                 boost::asio::placeholders::error));
@@ -72,7 +90,11 @@ void session::handle_read(const boost::system::error_code& ec,
 void session::handle_write(const boost::system::error_code& ec)
 {
   if (!ec) {
-    // For simplicity, close after one request/response
+    BOOST_LOG_TRIVIAL(info) << "Successfully sent response to client.";
     socket_.shutdown(tcp::socket::shutdown_both);
+  } else {
+    BOOST_LOG_TRIVIAL(warning) << "Write error: " << ec.message();
   }
+
+  delete this;
 }
