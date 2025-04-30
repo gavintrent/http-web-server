@@ -17,7 +17,7 @@ TEST(EchoHandlerTest, ReturnsRequestAsBody) {
     
     EXPECT_TRUE(response.status_code == 200);
     EXPECT_TRUE(response.headers["Content-Type"] == "text/plain");
-    EXPECT_EQ(response.body, "");
+    EXPECT_EQ(response.body, raw_request);
 }
 
 // test response contains correct content-length header
@@ -29,7 +29,7 @@ TEST(EchoHandlerTest, CorrectContentLength) {
     HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
     HttpResponse response = handler.handleRequest(req);
     // Extract the Content-Length value from the response
-    EXPECT_TRUE(response.headers["Content-Length"] == "0");
+    EXPECT_TRUE(response.headers["Content-Length"] == std::to_string(raw_request.size()));
 }
 
 // // test special characters in request
@@ -42,7 +42,7 @@ TEST(EchoHandlerTest, HandlesSpecialCharacters) {
     HttpResponse response = handler.handleRequest(req);
     
     EXPECT_TRUE(response.status_code == 200);
-    EXPECT_EQ(req.body, response.body);
+    EXPECT_EQ(raw_request, response.body);
 }
 
 // test non-GET request

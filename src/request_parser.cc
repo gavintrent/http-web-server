@@ -9,6 +9,8 @@ HttpRequest RequestParser::parse(const char* data, std::size_t len, boost::syste
   std::string raw(data, len);
   HttpRequest req;
 
+  //raw string for echo
+  req.raw.assign(data, len);
   // Split head & body
   auto split = raw.find("\r\n\r\n");
   std::string head = (split == std::string::npos ? raw : raw.substr(0, split));

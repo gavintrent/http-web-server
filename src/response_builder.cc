@@ -4,7 +4,7 @@ HttpResponse ResponseBuilder::echo(const HttpRequest& req) {
   HttpResponse res;
   if (req.method == "GET") {
     res.status_code = 200;
-    res.body = req.body;
+    res.body = req.raw;
     res.headers["Content-Type"] = "text/plain";
   } else {
     res.status_code = 400;
