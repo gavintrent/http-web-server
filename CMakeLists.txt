@@ -100,3 +100,7 @@ generate_coverage_report(
 # Bash integration test for the echo server
 add_test(NAME EchoServerIntegrationTest
          COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_test.sh)
+
+# Bash integration test for the echo server
+add_test(NAME StaticHandlerIntegrationTest
+         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/static_integration_test.sh)
