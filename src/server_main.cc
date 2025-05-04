@@ -18,6 +18,46 @@
 #include "config_parser.h"
 #include "logger.h"
 
+// helper function to parse server config and build routes
+using HandlerPtr = std::shared_ptr<RequestHandler>;
+bool parseConfig(const char* config_file, int& port, std::vector<std::tuple<std::string, std::string, HandlerPtr>>& routes) {
+    NginxConfigParser parser;
+    NginxConfig config;
+    if (!parser.Parse(config_file, &config) ||
+        config.statements_[0]->tokens_.size() != 2u || //assume first statement of config contains port
+        config.statements_[0]->tokens_[0] != "listen") {
+        BOOST_LOG_TRIVIAL(error) << "Error parsing config";
+        return false;
+    }
+    using namespace std;
+    port = stoi(config.statements_[0]->tokens_[1]);
+    BOOST_LOG_TRIVIAL(info) << "Parsed port: " << port;
+
+    // based on what is in the config, build a vector to know which handler to use
+
+    for (auto& stmt : config.statements_) {
+        if (stmt->tokens_[0] == "location" && stmt->tokens_.size() >= 2) {
+            string prefix = stmt->tokens_[1];
+            if (prefix.back() == ';') {
+              prefix.pop_back();
+            }
+            // only support echo for now, add static later on
+            if (prefix == "/echo") {
+                routes.emplace_back(
+                  "/echo", 
+                  "/", 
+                  std::make_shared<EchoHandler>());
+            } else {
+                routes.emplace_back(
+                  prefix, 
+                  stmt->tokens_[2], 
+                  std::make_shared<StaticHandler>());
+            }
+        }
+    }
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
   try
@@ -35,45 +75,10 @@ int main(int argc, char* argv[])
     auto echo_handler = std::make_shared<EchoHandler>();
     
     //parse argument as config file
-    NginxConfigParser parser;
-    NginxConfig config;
-    if (!parser.Parse(argv[1], &config) ||
-        config.statements_[0]->tokens_.size() != 2u || //assume first statement of config contains port
-        config.statements_[0]->tokens_[0] != "listen"
-    ) {
-      BOOST_LOG_TRIVIAL(error) << "Error parsing config\n";
+    int port;
+    std::vector<std::tuple<std::string, std::string, HandlerPtr>> routes;
+    if (!parseConfig(argv[1], port, routes)) {
       return 1;
-    }
-    
-    using namespace std; // For stoi.
-    int port = stoi(config.statements_[0]->tokens_[1]);
-    BOOST_LOG_TRIVIAL(info) << "Parsed port: " << port;
-
-    // based on what is in the config, build a vector to know which handler to use
-    using HandlerPtr = std::shared_ptr<RequestHandler>;
-    std::vector<std::tuple<std::string,std::string,HandlerPtr>> routes;
-    for (auto& stmt : config.statements_) {
-      if (stmt->tokens_[0] == "location" &&
-          stmt->tokens_.size() >= 2)
-      {
-        std::string prefix = stmt->tokens_[1];
-        if (prefix.back()==';') prefix.pop_back();
-        // only support echo for now, add static later on
-        if (prefix == "/echo") {
-          routes.emplace_back(
-            "/echo",
-            "/",
-            std::make_shared<EchoHandler>()
-          );
-        }
-        else {
-          routes.emplace_back(
-            prefix,
-            stmt->tokens_[2],
-            std::make_shared<StaticHandler>()
-          );
-        }
-      }
     }
 
     server srv(io_service, port, routes);
