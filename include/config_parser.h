@@ -25,7 +25,7 @@ class NginxConfig {
 // The driver that parses a config file and generates an NginxConfig.
 class NginxConfigParser {
  public:
-  NginxConfigParser() {}
+  NginxConfigParser() = default;
 
   // Take a opened config file or file name (respectively) and store the
   // parsed config in the provided NginxConfig out-param.  Returns true
@@ -33,26 +33,29 @@ class NginxConfigParser {
   bool Parse(std::istream* config_file, NginxConfig* config);
   bool Parse(const char* file_name, NginxConfig* config);
 
- private:
+ public:
+  // Token kinds produced by the lexer (made public for helper usage)
   enum TokenType {
-    TOKEN_TYPE_START = 0,
-    TOKEN_TYPE_NORMAL = 1,
-    TOKEN_TYPE_START_BLOCK = 2,
-    TOKEN_TYPE_END_BLOCK = 3,
-    TOKEN_TYPE_COMMENT = 4,
-    TOKEN_TYPE_STATEMENT_END = 5,
-    TOKEN_TYPE_EOF = 6,
-    TOKEN_TYPE_ERROR = 7,
-    TOKEN_TYPE_QUOTED_STRING = 8  // new token type for quoted strings
+    TOKEN_TYPE_START,
+    TOKEN_TYPE_NORMAL,
+    TOKEN_TYPE_START_BLOCK,
+    TOKEN_TYPE_END_BLOCK,
+    TOKEN_TYPE_COMMENT,
+    TOKEN_TYPE_STATEMENT_END,
+    TOKEN_TYPE_EOF,
+    TOKEN_TYPE_ERROR,
+    TOKEN_TYPE_QUOTED_STRING,
   };
+
+ private:
   const char* TokenTypeAsString(TokenType type);
 
   enum TokenParserState {
-    TOKEN_STATE_INITIAL_WHITESPACE = 0,
-    TOKEN_STATE_SINGLE_QUOTE = 1,
-    TOKEN_STATE_DOUBLE_QUOTE = 2,
-    TOKEN_STATE_TOKEN_TYPE_COMMENT = 3,
-    TOKEN_STATE_TOKEN_TYPE_NORMAL = 4
+    TOKEN_STATE_INITIAL_WHITESPACE,
+    TOKEN_STATE_SINGLE_QUOTE,
+    TOKEN_STATE_DOUBLE_QUOTE,
+    TOKEN_STATE_TOKEN_TYPE_COMMENT,
+    TOKEN_STATE_TOKEN_TYPE_NORMAL
   };
 
   TokenType ParseToken(std::istream* input, std::string* value);

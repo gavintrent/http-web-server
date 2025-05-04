@@ -17,275 +17,247 @@
 
 #include "config_parser.h"
 
+// ========================================
+// Namespace
+// ========================================
+namespace {
+  // returns true if the character is a whitespace character
+  inline bool IsWhiteSpace(char c) {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+  }
+
+  // returns true if the character is a block delimeter
+  inline bool IsBlockDelimeter(char c) {
+    return c == ';' || c == '{' || c == '}';
+  }
+
+  // returns true if the next character in the stream terminates a quoted token
+  bool NextCharTerminatesQuotedToken(std::istream* input) {
+    if (!input->good()) 
+      return true;
+    
+    char c = input->peek();
+    return IsWhiteSpace(c) || IsBlockDelimeter(c); 
+  }
+
+  // consume character until the matching quote is found
+  NginxConfigParser::TokenType ConsumeQuotedToken(std::istream* input, std::string* value, const char quote_char) {
+    while (input->good()) {
+      char c = input->get();
+      if (!input->good()) 
+        break;
+      
+      *value += c;
+
+      if (c == '\\') {
+        const char escaped_char = input->get();
+        if (!input->good()) {
+          return NginxConfigParser::TOKEN_TYPE_ERROR;
+        }
+        *value += escaped_char;
+        continue;
+      } 
+      if (c == quote_char) {
+        return NextCharTerminatesQuotedToken(input) ? 
+          NginxConfigParser::TOKEN_TYPE_QUOTED_STRING : 
+          NginxConfigParser::TOKEN_TYPE_ERROR;
+      }
+    }
+    return NginxConfigParser::TOKEN_TYPE_ERROR;
+  }
+  
+} // end of namespace
+
+// ========================================
+// NginxConfig implementation
+// ========================================
 std::string NginxConfig::ToString(int depth) {
-  std::string serialized_config;
+  std::string output;
+  // iterate through all statements in the config
   for (const auto& statement : statements_) {
-    serialized_config.append(statement->ToString(depth));
+    output.append(statement->ToString(depth));
   }
-  return serialized_config;
+  return output;
 }
 
+// ========================================
+// NginxConfigStatement implementation
+// ========================================
 std::string NginxConfigStatement::ToString(int depth) {
-  std::string serialized_statement;
-  for (int i = 0; i < depth; ++i) {
-    serialized_statement.append("  ");
-  }
-  for (unsigned int i = 0; i < tokens_.size(); ++i) {
+  std::string output(depth * 2, ' '); // 2 spaces per indentation
+
+  // iterate through all tokens in the statement
+  for (size_t i = 0; i < tokens_.size(); ++i) {
     if (i != 0) {
-      serialized_statement.append(" ");
+      output.append(" ");
     }
-    serialized_statement.append(tokens_[i]);
+    output.append(tokens_[i]);
   }
+  // if the statement has a child block, add it to the output
   if (child_block_.get() != nullptr) {
-    serialized_statement.append(" {\n");
-    serialized_statement.append(child_block_->ToString(depth + 1));
-    for (int i = 0; i < depth; ++i) {
-      serialized_statement.append("  ");
-    }
-    serialized_statement.append("}");
-  } else {
-    serialized_statement.append(";");
+    output.append(" {\n");
+    output.append(child_block_->ToString(depth + 1));
+    output.append(std::string(depth * 2, ' '));
+    output.append("}");
+  } else { // if the statement does not have a child block, add a semicolon to the output
+    
+    output.append(";");
   }
-  serialized_statement.append("\n");
-  return serialized_statement;
+  output.append("\n");
+  return output;
 }
 
+// ========================================
+// NginxConfigParser helper functions
+// ========================================
 const char* NginxConfigParser::TokenTypeAsString(TokenType type) {
   switch (type) {
-    case TOKEN_TYPE_START:         return "TOKEN_TYPE_START";
-    case TOKEN_TYPE_NORMAL:        return "TOKEN_TYPE_NORMAL";
-    case TOKEN_TYPE_START_BLOCK:   return "TOKEN_TYPE_START_BLOCK";
-    case TOKEN_TYPE_END_BLOCK:     return "TOKEN_TYPE_END_BLOCK";
-    case TOKEN_TYPE_COMMENT:       return "TOKEN_TYPE_COMMENT";
-    case TOKEN_TYPE_STATEMENT_END: return "TOKEN_TYPE_STATEMENT_END";
-    case TOKEN_TYPE_EOF:           return "TOKEN_TYPE_EOF";
-    case TOKEN_TYPE_ERROR:         return "TOKEN_TYPE_ERROR";
-    case TOKEN_TYPE_QUOTED_STRING: return "TOKEN_TYPE_QUOTED_STRING";  // added
+    case TOKEN_TYPE_START:         return "START";
+    case TOKEN_TYPE_NORMAL:        return "NORMAL";
+    case TOKEN_TYPE_START_BLOCK:   return "START_BLOCK";
+    case TOKEN_TYPE_END_BLOCK:     return "END_BLOCK";
+    case TOKEN_TYPE_COMMENT:       return "COMMENT";
+    case TOKEN_TYPE_STATEMENT_END: return "STATEMENT_END";
+    case TOKEN_TYPE_EOF:           return "EOF";
+    case TOKEN_TYPE_ERROR:         return "ERROR";
+    case TOKEN_TYPE_QUOTED_STRING: return "QUOTED_STRING";  // added
     default:                       return "Unknown token type";
   }
 }
 
+// ========================================
+// NginxConfigParser ParseToken
+// ========================================
 NginxConfigParser::TokenType NginxConfigParser::ParseToken(std::istream* input,
                                                            std::string* value) {
+  // clear any previous token data
+  value->clear();
   TokenParserState state = TOKEN_STATE_INITIAL_WHITESPACE;
   while (input->good()) {
     const char c = input->get();
-    if (!input->good()) {
+    if (!input->good()) 
       break;
-    }
+    
     switch (state) {
-      case TOKEN_STATE_INITIAL_WHITESPACE:
-        switch (c) {
-          case '{':
-            *value = c;
-            return TOKEN_TYPE_START_BLOCK;
-          case '}':
-            *value = c;
-            return TOKEN_TYPE_END_BLOCK;
-          case '#':
-            *value = c;
-            state = TOKEN_STATE_TOKEN_TYPE_COMMENT;
-            continue;
-          case '"':
-            *value = c;
-            state = TOKEN_STATE_DOUBLE_QUOTE;
-            continue;
-          case '\'':
-            *value = c;
-            state = TOKEN_STATE_SINGLE_QUOTE;
-            continue;
-          case ';':
-            *value = c;
-            return TOKEN_TYPE_STATEMENT_END;
-          case ' ':
-          case '\t':
-          case '\n':
-          case '\r':
-            continue;
-          default:
-            *value += c;
-            state = TOKEN_STATE_TOKEN_TYPE_NORMAL;
-            continue;
-        }
-      case TOKEN_STATE_SINGLE_QUOTE:
-        // allow for backslash-escaping within strings.
-        if (c == '\\' && input->good()) {
-          // escape sequence
-          const char next_c = input->get();
-          if (input->good()) {
-            *value += c; // add the backslash
-            *value += next_c; // add the escaped character
-          } else {
-            // end of file after backslash is an error
-            return TOKEN_TYPE_ERROR;
-          }
-        } else {
+      case TOKEN_STATE_INITIAL_WHITESPACE: // if token is a whitespace, skip, else return the proper token type
+        if (IsWhiteSpace(c)) {
+          continue;  // Skip.
+        } else if (c == '{') {
+          *value = c;
+          return TOKEN_TYPE_START_BLOCK;
+        } else if (c == '}') {
+          *value = c;
+          return TOKEN_TYPE_END_BLOCK;
+        } else if (c == ';') {
+          *value = c;
+          return TOKEN_TYPE_STATEMENT_END;
+        } else if (c == '#') {
+          state = TOKEN_STATE_TOKEN_TYPE_COMMENT;
+        } else if (c == '\"' || c == '\'') {
+          *value = c;
+          return ConsumeQuotedToken(input, value, c);
+        } else {  // Start a regular token.
           *value += c;
-          if (c == '\'') {
-            // the end of a quoted token should be followed by whitespace
-            if (input->good()) {
-              const char next_c = input->peek();
-              if (next_c == ' ' || next_c == '\t' || next_c == '\n' || next_c == '\r' ||
-                  next_c == ';' || next_c == '{' || next_c == '}') {
-                return TOKEN_TYPE_QUOTED_STRING;
-              } else {
-                // no whitespace after quoted string
-                return TOKEN_TYPE_ERROR;
-              }
-            } else {
-              // end of file is acceptable after closing quote
-              return TOKEN_TYPE_QUOTED_STRING;
-            }
-          }
+          state = TOKEN_STATE_TOKEN_TYPE_NORMAL;
         }
-        continue;
-      case TOKEN_STATE_DOUBLE_QUOTE:
-        // allow for backslash-escaping within strings
-        if (c == '\\' && input->good()) {
-          // escape sequence
-          const char next_c = input->get();
-          if (input->good()) {
-            *value += c; // add backslash
-            *value += next_c; // add escaped character
-          } else {
-            // end of file after backslash is an error
-            return TOKEN_TYPE_ERROR;
-          }
-        } else {
-          *value += c;
-          if (c == '"') {
-            // the end of a quoted token should be followed by whitespace
-            if (input->good()) {
-              const char next_c = input->peek();
-              if (next_c == ' ' || next_c == '\t' || next_c == '\n' || next_c == '\r' ||
-                  next_c == ';' || next_c == '{' || next_c == '}') {
-                return TOKEN_TYPE_QUOTED_STRING;
-              } else {
-                // no whitespace after quoted string
-                return TOKEN_TYPE_ERROR;
-              }
-            } else {
-              // end of file is acceptable after closing quote
-              return TOKEN_TYPE_QUOTED_STRING;
-            }
-          }
-        }
-        continue;
-      case TOKEN_STATE_TOKEN_TYPE_COMMENT:
+        break;
+
+      case TOKEN_STATE_TOKEN_TYPE_NORMAL: // if token is a normal, return the normal
+        if (IsWhiteSpace(c) || IsBlockDelimeter(c)) {
+          input->unget();
+          return TOKEN_TYPE_NORMAL;
+        } 
+        *value += c;
+        break;
+      
+      case TOKEN_STATE_TOKEN_TYPE_COMMENT: // if token is a comment, return the comment
         if (c == '\n' || c == '\r') {
           return TOKEN_TYPE_COMMENT;
         }
-        *value += c;
-        continue;
-      case TOKEN_STATE_TOKEN_TYPE_NORMAL:
-        if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || // fixed duplicate c == '\t'
-            c == ';' || c == '{' || c == '}') {
-          input->unget();
-          return TOKEN_TYPE_NORMAL;
-        }
-        *value += c;
-        continue;
+        break;
+
+      default:
+        break;
     }
   }
 
-  // If we get here, we reached the end of the file.
-  if (state == TOKEN_STATE_SINGLE_QUOTE ||
-      state == TOKEN_STATE_DOUBLE_QUOTE) {
-    return TOKEN_TYPE_ERROR;
-  }
-
   if (!value->empty()) {
-    return TOKEN_TYPE_ERROR;
+    return TOKEN_TYPE_NORMAL;
   }
-
   return TOKEN_TYPE_EOF;
 }
 
+// ========================================
+// NginxConfigParser Parse
+// ========================================
 bool NginxConfigParser::Parse(std::istream* config_file, NginxConfig* config) {
   std::stack<NginxConfig*> config_stack;
   config_stack.push(config);
-  TokenType last_token_type = TOKEN_TYPE_START;
+
+  TokenType last = TOKEN_TYPE_START;
   TokenType token_type;
   while (true) {
     std::string token;
     token_type = ParseToken(config_file, &token);
     //printf ("%s: %s\n", TokenTypeAsString(token_type), token.c_str());
     if (token_type == TOKEN_TYPE_ERROR) {
-      break;
+      return false;
     }
 
     if (token_type == TOKEN_TYPE_COMMENT) {
-      // Skip comments.
-      continue;
+      continue; // Skip comments.
     }
 
-    if (token_type == TOKEN_TYPE_START) {
-      // Error.
-      break;
-    } else if (token_type == TOKEN_TYPE_NORMAL || token_type == TOKEN_TYPE_QUOTED_STRING) { // added the new token type
-      if (last_token_type == TOKEN_TYPE_START ||
-          last_token_type == TOKEN_TYPE_STATEMENT_END ||
-          last_token_type == TOKEN_TYPE_START_BLOCK ||
-          last_token_type == TOKEN_TYPE_END_BLOCK ||
-          last_token_type == TOKEN_TYPE_NORMAL ||
-          last_token_type == TOKEN_TYPE_QUOTED_STRING) { // added the new token type
-        if (last_token_type != TOKEN_TYPE_NORMAL && 
-            last_token_type != TOKEN_TYPE_QUOTED_STRING) { // added the new token type
-          config_stack.top()->statements_.emplace_back(
-              new NginxConfigStatement);
+    switch (token_type) {// if token is a normal or quoted string, add it to current statement
+      case TOKEN_TYPE_NORMAL:
+      case TOKEN_TYPE_QUOTED_STRING: { 
+        if (last == TOKEN_TYPE_START || last == TOKEN_TYPE_STATEMENT_END || last == TOKEN_TYPE_START_BLOCK || last == TOKEN_TYPE_END_BLOCK) {
+          config_stack.top()->statements_.emplace_back(new NginxConfigStatement); 
+          }
+          config_stack.top()->statements_.back().get()->tokens_.push_back(token);
+        break;
+      }
+      case TOKEN_TYPE_STATEMENT_END: // if token is a statement end, check if previous token was normal or quoted string
+        if (last != TOKEN_TYPE_NORMAL && last != TOKEN_TYPE_QUOTED_STRING) {
+          return false;
         }
-        config_stack.top()->statements_.back().get()->tokens_.push_back(
-            token);
-      } else {
-        // Error.
         break;
-      }
-    } else if (token_type == TOKEN_TYPE_STATEMENT_END) {
-      if (last_token_type != TOKEN_TYPE_NORMAL && 
-          last_token_type != TOKEN_TYPE_QUOTED_STRING) { // added to fix end block error
-        // Error.
+
+      case TOKEN_TYPE_START_BLOCK: // if token is a start block, check if previous token was a normal
+        if (last != TOKEN_TYPE_NORMAL) {
+          return false;
+        }
+        // add a child block to the current statement
+        config_stack.top()->statements_.back().get()->child_block_.reset(new NginxConfig);
+        config_stack.push(config_stack.top()->statements_.back().get()->child_block_.get());
         break;
-      }
-    } else if (token_type == TOKEN_TYPE_START_BLOCK) {
-      if (last_token_type != TOKEN_TYPE_NORMAL) {
-        // Error.
+
+      case TOKEN_TYPE_END_BLOCK: // if token is a end block, check if config stack size is 1, and if last token was a statement end, end block, or start block
+        if (config_stack.size() == 1) {
+          return false;
+        }
+        if (last != TOKEN_TYPE_STATEMENT_END && last != TOKEN_TYPE_END_BLOCK && last != TOKEN_TYPE_START_BLOCK) {
+          return false;
+        }
+        // pop the current statement from the stack
+        config_stack.pop();
+        break;
+
+      case TOKEN_TYPE_EOF: // if token is a end of file, check if config stack size is 1, and if last token was a statement end, end block, or start block
+        if (config_stack.size() != 1) {
+          return false;
+        }
+        return last == TOKEN_TYPE_STATEMENT_END || last == TOKEN_TYPE_END_BLOCK ||
+               (last == TOKEN_TYPE_START && config_stack.top()->statements_.empty());
+
+      default:
         return false;
-      }
-      NginxConfig* const new_config = new NginxConfig;
-      config_stack.top()->statements_.back().get()->child_block_.reset(
-          new_config);
-      config_stack.push(new_config);
-    } else if (token_type == TOKEN_TYPE_END_BLOCK) {
-        if (config_stack.size() < 2) { // added to fix end block error
-            // Error.
-            break;
-        }
-      if (last_token_type != TOKEN_TYPE_STATEMENT_END && 
-          last_token_type != TOKEN_TYPE_END_BLOCK &&
-          last_token_type != TOKEN_TYPE_START_BLOCK) { // added to fix end block error
-        // Error.
-        break;
-      }
-      config_stack.pop();
-    } else if (token_type == TOKEN_TYPE_EOF) {
-      if (last_token_type == TOKEN_TYPE_START && config_stack.top()->statements_.empty()) {// If the file is empty, we consider it valid.
-        return true;
-      }
-      if (last_token_type != TOKEN_TYPE_STATEMENT_END &&
-          last_token_type != TOKEN_TYPE_END_BLOCK) {
-        // Error.
-        break;
-      }
-      return true;
-    } else {
-      // Error. Unknown token.
-      break;
     }
-    last_token_type = token_type;
+    last = token_type;
   }
 
   printf ("Bad transition from %s to %s\n",
-          TokenTypeAsString(last_token_type),
+          TokenTypeAsString(last),
           TokenTypeAsString(token_type));
   return false;
 }
