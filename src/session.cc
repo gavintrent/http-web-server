@@ -55,7 +55,6 @@ void session::handle_read(const boost::system::error_code& ec,
   if (parse_ec) {
     BOOST_LOG_TRIVIAL(error) << "Failed to parse HTTP request: " << parse_ec.message();
     app_res.status_code = 400;
-    app_res.body        = "Bad Request";
   } else {
     BOOST_LOG_TRIVIAL(debug) << "Parsed request, routing...";
 
@@ -71,7 +70,6 @@ void session::handle_read(const boost::system::error_code& ec,
     if (!handled) {
       BOOST_LOG_TRIVIAL(info) << "No matching handler found for path: " << req.path;
       app_res.status_code = 404;
-      app_res.body        = "Not Found";
     }
   }
 

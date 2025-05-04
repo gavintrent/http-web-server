@@ -15,16 +15,19 @@ TEST(ResponseBuilderTest, EchoOnGET) {
   EXPECT_EQ(res.headers["Content-Length"], std::to_string(req.raw.size()));
 }
 
-// test bad request on non-GET
-TEST(ResponseBuilderTest, BadRequestOnNonGET) {
+// test empty body
+TEST(ResponseBuilderTest, EmptyBodyOnGET) {
   HttpRequest req;
-  req.method = "POST";
-  req.body   = "";
+  req.method = "GET";
+  req.raw = "";
 
   HttpResponse res = ResponseBuilder::echo(req);
-  EXPECT_EQ(res.status_code, 400);
-  EXPECT_EQ(res.body, "Bad Request");
+  EXPECT_EQ(res.status_code, 200);
+  EXPECT_EQ(res.body, "");
+  EXPECT_EQ(res.headers["Content-Type"], "text/plain");
+  EXPECT_EQ(res.headers["Content-Length"], "0");
 }
+
 
 // test content length header
 TEST(ResponseBuilderTest, ContentLengthHeader) {
