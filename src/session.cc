@@ -57,7 +57,7 @@ void session::handle_read(const boost::system::error_code& ec,
     app_res.status_code = 400;
   } else {
     BOOST_LOG_TRIVIAL(debug) << "Parsed request, routing...";
-
+    
     bool handled = false;
     for (auto& [prefix, new_prefix, handler] : routes_) {
       if (req.path.find(prefix, 0) == 0) {
@@ -76,6 +76,7 @@ void session::handle_read(const boost::system::error_code& ec,
   // Build Beast response
   response.result((http::status)app_res.status_code);
   response.body() = std::move(app_res.body);
+  response.set(http::field::content_type, app_res.headers["Content-Type"]);
   response.prepare_payload();
 
   BOOST_LOG_TRIVIAL(debug) << "Sending response with status code: " << app_res.status_code;

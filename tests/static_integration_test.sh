@@ -25,18 +25,25 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Give server a moment to start
-sleep 1
-
 # Send GET request
 curl -s -i -S "http://localhost:$PORT/static1/test.html" -o "$RESPONSE_FILE"
 
 # Validate response
 if grep -q "HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
   echo "Static handler test passed."
-  exit 0
 else
   echo "Static handler test failed. Response was:"
   cat "$RESPONSE_FILE"
   exit 1
 fi
+
+# Check that Content-Type header is present
+if grep -i -q "^Content-Type:" "$RESPONSE_FILE"; then
+  echo "Static handler Content-Type header is present. Test passed."
+else
+  echo "Static handler test failed: missing Content-Type header"
+  cat "$RESPONSE_FILE"
+  exit 1
+fi
+
+exit 0

@@ -19,10 +19,7 @@ FROM ubuntu:noble AS deploy
 # Copy server output binary to "."
 COPY --from=builder /usr/src/project/build/bin/server .
 COPY --from=builder /usr/src/project/config/gcloud.config .
-COPY --from=builder /usr/src/project/static_files/test.html ./static_files/test.html
-COPY --from=builder /usr/src/project/static_files/test.jpg ./static_files/test.jpg
-COPY --from=builder /usr/src/project/static_files/test.txt ./static_files/test.txt
-COPY --from=builder /usr/src/project/static_files/test.zip ./static_files/test.zip
+COPY --from=builder /usr/src/project/static_files/ ./static_files/
 
 # Expose some port(s)
 EXPOSE 80

@@ -5,14 +5,11 @@
 #include <map>
 
 #include "request_handler.h"
-#include "response_builder.h"
 
 /// Serves `/echo` URLs by echoing back the request body.
 class EchoHandler : public RequestHandler {
 public:
-  HttpResponse handleRequest(const HttpRequest& req) override {
-    return ResponseBuilder::echo(req);
-  }
+  HttpResponse handleRequest(const HttpRequest& req);
 };
 
 #endif
