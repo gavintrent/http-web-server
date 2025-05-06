@@ -10,6 +10,9 @@
 class EchoHandler : public RequestHandler {
 public:
   HttpResponse handleRequest(const HttpRequest& req);
+protected:
+  // new hook
+  virtual HttpResponse doEcho(const HttpRequest& req);
 };
 
 #endif

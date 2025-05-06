@@ -59,7 +59,7 @@ add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib gtest_main)
 
 add_executable(echo_handler_test tests/echo_handler_test.cc)
-target_link_libraries(echo_handler_test echo_handler_lib request_parser_lib gtest_main)
+target_link_libraries(echo_handler_test echo_handler_lib request_parser_lib gtest_main gmock_main)
 
 add_executable(static_handler_test tests/static_handler_test.cc)
 target_link_libraries(static_handler_test static_handler_lib request_parser_lib gtest_main)
