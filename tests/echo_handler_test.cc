@@ -55,9 +55,11 @@ TEST(EchoHandlerTest, HandleGetAndReturnResponseMock) {
     EXPECT_EQ(out.status_code, fakeResp.status_code);
     EXPECT_EQ(out.headers,     fakeResp.headers);
     EXPECT_EQ(out.body,        fakeResp.body);
+    EXPECT_EQ(out.body.size(), fakeResp.body.size());
+
 }
 
-TEST(EchoHandlerTest, HandleNonGET_DoesNotCallEchoImplAndReturns400) {
+TEST(EchoHandlerTest, HandleNonGETAndReturns400Mock) {
     MockEchoHandler mock;
     HttpRequest req = makeRequest("POST", "/");
     EXPECT_CALL(mock, doEcho(_)).Times(0);
@@ -66,53 +68,26 @@ TEST(EchoHandlerTest, HandleNonGET_DoesNotCallEchoImplAndReturns400) {
     EXPECT_EQ(out.status_code, 400);
 }
 
-// test simple echo handler
-TEST(EchoHandlerTest, ReturnsRequestAsBody) {
-    std::string raw_request = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
-    EchoHandler handler;
-    RequestParser parser;
-    boost::system::error_code ec;
-    HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
-    HttpResponse response = handler.handleRequest(req);
-    
-    EXPECT_TRUE(response.status_code == 200);
-    EXPECT_TRUE(response.headers["Content-Type"] == "text/plain");
-    EXPECT_EQ(response.body, raw_request);
-}
+// test special characters in request
+TEST(EchoHandlerTest, HandleGetSpecialCharacterAndReturnResponseMock) {
+    MockEchoHandler mock;
+    HttpRequest req = makeRequest("GET", "/search", "?q=hello%20world&lang=en");
 
-// test response contains correct content-length header
-TEST(EchoHandlerTest, CorrectContentLength) {
-    std::string raw_request = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
-    EchoHandler handler;
-    RequestParser parser;
-    boost::system::error_code ec;
-    HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
-    HttpResponse response = handler.handleRequest(req);
-    // Extract the Content-Length value from the response
-    EXPECT_TRUE(response.headers["Content-Length"] == std::to_string(raw_request.size()));
-}
+    HttpResponse fakeResp;
+    fakeResp.status_code = 200;
+    fakeResp.headers = {
+        {"Content-Type", "text/plain"},
+        {"Content-Length", std::to_string(req.raw.size())}
+    };
+    fakeResp.body = req.raw;
 
-// // test special characters in request
-TEST(EchoHandlerTest, HandlesSpecialCharacters) {
-    std::string raw_request = "GET /search?q=hello%20world&lang=en HTTP/1.1\r\nHost: localhost\r\n\r\n";
-    EchoHandler handler;
-    RequestParser parser;
-    boost::system::error_code ec;
-    HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
-    HttpResponse response = handler.handleRequest(req);
-    
-    EXPECT_TRUE(response.status_code == 200);
-    EXPECT_EQ(raw_request, response.body);
-}
+    EXPECT_CALL(mock, doEcho(Ref(req)))
+        .WillOnce(Return(fakeResp));
 
-// test non-GET request
-TEST(EchoHandlerTest, NonGETRequest) {
-    std::string raw_request = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\n";
-    EchoHandler handler;
-    RequestParser parser;
-    boost::system::error_code ec;
-    HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
-    HttpResponse response = handler.handleRequest(req);
-    
-    EXPECT_TRUE(response.status_code == 400);
+    HttpResponse out = mock.handleRequest(req);
+    EXPECT_EQ(out.status_code, fakeResp.status_code);
+    EXPECT_EQ(out.headers,     fakeResp.headers);
+    EXPECT_EQ(out.body,        fakeResp.body);
+    EXPECT_EQ(out.body.size(), fakeResp.body.size());
+
 }

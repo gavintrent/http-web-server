@@ -6,13 +6,18 @@
 #include <boost/system/error_code.hpp>
 #include "http_types.h" 
 
+static HttpRequest makeRequest(const std::string& method,
+                               const std::string& path) {
+    HttpRequest req;
+    req.method = method;
+    req.path   = path;
+    return req;
+}
+
 // test getting html
 TEST(StaticHandlerTest, GetHTML) {
-    std::string raw_request = "GET /static_files/test.html HTTP/1.1\r\nHost: localhost\r\n\r\n";
     StaticHandler handler;
-    RequestParser parser;
-    boost::system::error_code ec;
-    HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
+    HttpRequest req = makeRequest("GET", "/static_files/test.html");
     HttpResponse response = handler.handleRequest(req);
     
     EXPECT_TRUE(response.status_code == 200);
@@ -21,11 +26,8 @@ TEST(StaticHandlerTest, GetHTML) {
 
 // test getting jpeg
 TEST(StaticHandlerTest, GetJPEG) {
-    std::string raw_request = "GET /static_files/test.jpg HTTP/1.1\r\nHost: localhost\r\n\r\n";
     StaticHandler handler;
-    RequestParser parser;
-    boost::system::error_code ec;
-    HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
+    HttpRequest req = makeRequest("GET", "/static_files/test.jpg");
     HttpResponse response = handler.handleRequest(req);
     
     EXPECT_TRUE(response.status_code == 200);
@@ -34,11 +36,8 @@ TEST(StaticHandlerTest, GetJPEG) {
 
 // test getting txt
 TEST(StaticHandlerTest, GetTXT) {
-    std::string raw_request = "GET /static_files/test.txt HTTP/1.1\r\nHost: localhost\r\n\r\n";
     StaticHandler handler;
-    RequestParser parser;
-    boost::system::error_code ec;
-    HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
+    HttpRequest req = makeRequest("GET", "/static_files/test.txt");
     HttpResponse response = handler.handleRequest(req);
     
     EXPECT_TRUE(response.status_code == 200);
@@ -47,11 +46,8 @@ TEST(StaticHandlerTest, GetTXT) {
 
 // test getting zip
 TEST(StaticHandlerTest, GetZIP) {
-    std::string raw_request = "GET /static_files/test.zip HTTP/1.1\r\nHost: localhost\r\n\r\n";
     StaticHandler handler;
-    RequestParser parser;
-    boost::system::error_code ec;
-    HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
+    HttpRequest req = makeRequest("GET", "/static_files/test.zip");
     HttpResponse response = handler.handleRequest(req);
     
     EXPECT_TRUE(response.status_code == 200);
@@ -60,11 +56,8 @@ TEST(StaticHandlerTest, GetZIP) {
 
 // test non-GET request
 TEST(StaticHandlerTest, NonGETRequest) {
-    std::string raw_request = "POST / HTTP/1.1\r\nHost: localhost\r\n\r\n";
     StaticHandler handler;
-    RequestParser parser;
-    boost::system::error_code ec;
-    HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
+    HttpRequest req = makeRequest("POST", "/static_files/test.html");
     HttpResponse response = handler.handleRequest(req);
     
     EXPECT_TRUE(response.status_code == 400);
@@ -72,11 +65,8 @@ TEST(StaticHandlerTest, NonGETRequest) {
 
 // test bad target path
 TEST(StaticHandlerTest, BadPath) {
-    std::string raw_request = "GET /bad_path HTTP/1.1\r\nHost: localhost\r\n\r\n";
     StaticHandler handler;
-    RequestParser parser;
-    boost::system::error_code ec;
-    HttpRequest req = parser.parse(raw_request.c_str(), raw_request.size(), ec);
+    HttpRequest req = makeRequest("GET", "/bad_path");
     HttpResponse response = handler.handleRequest(req);
     
     EXPECT_TRUE(response.status_code == 404);
