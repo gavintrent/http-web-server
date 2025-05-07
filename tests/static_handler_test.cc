@@ -6,17 +6,19 @@
 #include <boost/system/error_code.hpp>
 #include "http_types.h" 
 
-static HttpRequest makeRequest(const std::string& method,
-                               const std::string& path) {
-    HttpRequest req;
-    req.method = method;
-    req.path   = path;
-    return req;
-}
-
-// test getting html
-TEST(StaticHandlerTest, GetHTML) {
+class StaticHandlerTestFixture : public ::testing::Test {
+protected:
     StaticHandler handler;
+
+    HttpRequest makeRequest(const std::string& method, const std::string& path) {
+        HttpRequest req;
+        req.method = method;
+        req.path = path;
+        return req;
+    }
+};
+
+TEST_F(StaticHandlerTestFixture, GetHTML) {
     HttpRequest req = makeRequest("GET", "/static_files/test.html");
     HttpResponse response = handler.handleRequest(req);
     
@@ -25,8 +27,7 @@ TEST(StaticHandlerTest, GetHTML) {
 }
 
 // test getting jpeg
-TEST(StaticHandlerTest, GetJPEG) {
-    StaticHandler handler;
+TEST_F(StaticHandlerTestFixture, GetJPEG) {
     HttpRequest req = makeRequest("GET", "/static_files/test.jpg");
     HttpResponse response = handler.handleRequest(req);
     
@@ -35,8 +36,7 @@ TEST(StaticHandlerTest, GetJPEG) {
 }
 
 // test getting txt
-TEST(StaticHandlerTest, GetTXT) {
-    StaticHandler handler;
+TEST_F(StaticHandlerTestFixture, GetTXT) {
     HttpRequest req = makeRequest("GET", "/static_files/test.txt");
     HttpResponse response = handler.handleRequest(req);
     
@@ -45,8 +45,7 @@ TEST(StaticHandlerTest, GetTXT) {
 }
 
 // test getting zip
-TEST(StaticHandlerTest, GetZIP) {
-    StaticHandler handler;
+TEST_F(StaticHandlerTestFixture, GetZIP) {
     HttpRequest req = makeRequest("GET", "/static_files/test.zip");
     HttpResponse response = handler.handleRequest(req);
     
@@ -55,8 +54,7 @@ TEST(StaticHandlerTest, GetZIP) {
 }
 
 // test non-GET request
-TEST(StaticHandlerTest, NonGETRequest) {
-    StaticHandler handler;
+TEST_F(StaticHandlerTestFixture, NonGETRequest) {
     HttpRequest req = makeRequest("POST", "/static_files/test.html");
     HttpResponse response = handler.handleRequest(req);
     
@@ -64,8 +62,7 @@ TEST(StaticHandlerTest, NonGETRequest) {
 }
 
 // test bad target path
-TEST(StaticHandlerTest, BadPath) {
-    StaticHandler handler;
+TEST_F(StaticHandlerTestFixture, BadPath) {
     HttpRequest req = makeRequest("GET", "/bad_path");
     HttpResponse response = handler.handleRequest(req);
     
