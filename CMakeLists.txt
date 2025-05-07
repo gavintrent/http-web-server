@@ -67,12 +67,33 @@ target_link_libraries(static_handler_test static_handler_lib request_parser_lib 
 add_executable(request_parser_test tests/request_parser_test.cc)
 target_link_libraries(request_parser_test request_parser_lib gtest_main)
 
+add_executable(server_test tests/server_test.cc)
+target_link_libraries(server_test
+  server_lib
+  session_lib
+  request_parser_lib
+  Boost::system
+  Boost::log_setup
+  Boost::log
+  gtest_main)
+
+add_executable(logger_test tests/logger_test.cc)
+target_link_libraries(logger_test
+  logger_lib
+  Boost::log
+  Boost::log_setup
+  Boost::system
+  gtest_main)
+
 
 # tests go under here
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(echo_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(static_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(request_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(server_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(logger_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+
 # Update with target/test targets
 include(cmake/CodeCoverageReportConfig.cmake)
 generate_coverage_report(
@@ -84,11 +105,14 @@ generate_coverage_report(
     config_parser_lib 
     echo_handler_lib 
     static_handler_lib
+    logger_lib
   TESTS 
     config_parser_test
     echo_handler_test
     static_handler_test
     request_parser_test
+    server_test
+    logger_test
   )
 
 # Bash integration test for the echo server

@@ -21,7 +21,9 @@ class session
 public:
   session(boost::asio::io_service& io_service, const std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>>& routes);
   tcp::socket& socket();
-  void start();
+  virtual void start();
+  virtual ~session() = default;
+  //void start();
   
 private:
   void handle_read(const boost::system::error_code& error, size_t bytes_transferred);

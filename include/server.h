@@ -17,12 +17,13 @@ public:
          short port,
          const std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>>& routes);
 
+    void start_accept();
+    void handle_accept(session* new_session, const boost::system::error_code& error);
+
 private:
-  void start_accept();
-  void handle_accept(session* new_session, const boost::system::error_code& error);
-  
   boost::asio::io_service& io_service_;
   tcp::acceptor acceptor_;
   std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>> routes_;
+  friend class ServerTest;
 };
 #endif
