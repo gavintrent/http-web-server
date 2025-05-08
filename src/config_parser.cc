@@ -14,6 +14,9 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include <unordered_set>
+#include <boost/log/trivial.hpp>
+#include <map>
 
 #include "config_parser.h"
 
@@ -274,4 +277,72 @@ bool NginxConfigParser::Parse(const char* file_name, NginxConfig* config) {
       Parse(dynamic_cast<std::istream*>(&config_file), config);
   config_file.close();
   return return_value;
+}
+
+using HandlerPtr = std::shared_ptr<RequestHandler>;
+bool parseConfig(const char* config_file, int& port, std::vector<std::tuple<std::string, std::string, HandlerPtr>>& routes) {
+    NginxConfigParser parser;
+    NginxConfig config;
+
+    if (!parser.Parse(config_file, &config)) {
+        BOOST_LOG_TRIVIAL(error) << "Error parsing config file";
+        return false;
+    }
+
+    std::unordered_set<std::string> seen_paths; // Track to prevent duplicate paths
+
+    for (const auto& stmt : config.statements_) {
+        if (stmt->tokens_.size() == 2 && stmt->tokens_[0] == "port") {
+            port = std::stoi(stmt->tokens_[1]);
+            BOOST_LOG_TRIVIAL(info) << "Parsed port: " << port;
+        } else if (stmt->tokens_.size() >= 3 && stmt->tokens_[0] == "location") {
+            std::string path = stmt->tokens_[1];
+            std::string handler_type = stmt->tokens_[2];
+
+            // Check for trailing slash
+            if (path.back() == '/') {
+                BOOST_LOG_TRIVIAL(error) << "Trailing slashes not allowed: " << path;
+                return false;
+            }
+
+            // Check for duplicates
+            if (!seen_paths.insert(path).second) {
+                BOOST_LOG_TRIVIAL(fatal) << "Duplicate location: " << path; // Server shutdown on duplicate
+                return false;
+            }
+
+            // Parse handler arguments from the child block
+            std::map<std::string, std::string> handler_args;
+            if (stmt->child_block_) {
+                for (const auto& arg_stmt : stmt->child_block_->statements_) {
+                    if (arg_stmt->tokens_.size() >= 2) {
+                        handler_args[arg_stmt->tokens_[0]] = arg_stmt->tokens_[1];
+                    }
+                }
+            }
+
+            // Get handler instance
+            std::shared_ptr<RequestHandler> handler;
+            if (handler_type == "EchoHandler") {
+                handler = std::make_shared<EchoHandler>();
+            } else if (handler_type == "StaticHandler") {
+                handler = std::make_shared<StaticHandler>();
+            } else {
+                BOOST_LOG_TRIVIAL(error) << "Unknown handler type: " << handler_type;
+                return false;
+            }
+
+            // Get root dir from child { ... } block
+            std::string root_dir = "";
+            for (const auto& arg_stmt : stmt->child_block_->statements_) {
+              if (arg_stmt->tokens_.size() >= 2 && arg_stmt->tokens_[0] == "root") {
+                root_dir = arg_stmt->tokens_[1];
+              }
+            }
+
+            routes.emplace_back(path, root_dir, handler);
+        }
+    }
+
+    return true;
 }
