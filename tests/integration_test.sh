@@ -13,7 +13,12 @@ RESPONSE_BODY=$(mktemp)
 RESPONSE_HEADERS=$(mktemp)
 
 # Create minimal config file
-echo "listen $PORT; location /echo;" > "$CONFIG_FILE"
+cat > "$CONFIG_FILE" <<EOF 
+port 8080;
+
+location /echo EchoHandler {
+}
+EOF
 
 # Start server in background
 "$SERVER_EXEC" "$CONFIG_FILE" &

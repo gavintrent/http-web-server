@@ -12,7 +12,16 @@ CONFIG_FILE=$(mktemp)
 RESPONSE_FILE=$(mktemp)
 
 # Create minimal config file
-echo "listen $PORT; location /echo; location /static1 /static_files;" > "$CONFIG_FILE"
+cat > "$CONFIG_FILE" <<EOF 
+port 8080;
+
+location /echo EchoHandler {
+}
+
+location /static1 StaticHandler {
+  root /static_files;
+}
+EOF
 
 # Start server in background
 "$SERVER_EXEC" "$CONFIG_FILE" &
