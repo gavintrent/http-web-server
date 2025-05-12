@@ -67,10 +67,6 @@ void session::handle_read(const boost::system::error_code& ec,
         break;
       }
     }
-    if (!handled) {
-      BOOST_LOG_TRIVIAL(info) << "No matching handler found for path: " << req.path;
-      app_res.status_code = 404;
-    }
   }
 
   // Build Beast response

@@ -7,6 +7,7 @@
 #include "request_handler.h"
 #include "echo_handler.h"
 #include "static_handler.h"
+#include "not_found_handler.h"
 
 bool parseConfig(const char* config_file, int& port,
     std::vector<std::tuple<std::string, std::string, std::shared_ptr<RequestHandler>>>& routes);

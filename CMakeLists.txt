@@ -47,18 +47,20 @@ add_library(server_lib src/server.cc)
 add_library(session_lib src/session.cc)
 add_library(config_parser_lib src/config_parser.cc)
 add_library(echo_handler_lib src/echo_handler.cc)
+add_library (not_found_handler_lib src/not_found_handler.cc)
 add_library(static_handler_lib src/static_handler.cc)
 add_library(request_parser_lib src/request_parser.cc)
 add_library(logger_lib src/logger.cc)
 
 # executables go under here
 add_executable(server src/server_main.cc)
-target_link_libraries(server logger_lib server_main_lib server_lib session_lib config_parser_lib echo_handler_lib static_handler_lib request_parser_lib Boost::log_setup Boost::log Boost::system Boost::regex)
+target_link_libraries(server logger_lib server_main_lib server_lib session_lib config_parser_lib echo_handler_lib not_found_handler_lib static_handler_lib request_parser_lib Boost::log_setup Boost::log Boost::system Boost::regex)
 
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib 
   logger_lib
   echo_handler_lib
+  not_found_handler_lib
   static_handler_lib
   Boost::log
   Boost::log_setup
@@ -77,7 +79,8 @@ target_link_libraries(request_parser_test request_parser_lib gtest_main)
 add_executable(parse_common_api_test tests/parse_common_api_test.cc)
 target_link_libraries(parse_common_api_test 
   config_parser_lib 
-  echo_handler_lib 
+  echo_handler_lib
+  not_found_handler_lib
   static_handler_lib
   Boost::log
   Boost::log_setup
@@ -121,6 +124,7 @@ generate_coverage_report(
     session_lib 
     config_parser_lib 
     echo_handler_lib 
+    not_found_handler_lib 
     static_handler_lib
     logger_lib
   TESTS 
@@ -140,3 +144,6 @@ add_test(NAME EchoServerIntegrationTest
 # Bash integration test for the echo server
 add_test(NAME StaticHandlerIntegrationTest
          COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/static_integration_test.sh)
+
+add_test(NAME NotFoundHandlerIntegrationTest
+         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/not_found_integration_test.sh)

@@ -327,9 +327,6 @@ bool parseConfig(const char* config_file, int& port, std::vector<std::tuple<std:
                 handler = std::make_shared<EchoHandler>();
             } else if (handler_type == "StaticHandler") {
                 handler = std::make_shared<StaticHandler>();
-            } else {
-                BOOST_LOG_TRIVIAL(error) << "Unknown handler type: " << handler_type;
-                return false;
             }
 
             // Get root dir from child { ... } block
@@ -341,6 +338,9 @@ bool parseConfig(const char* config_file, int& port, std::vector<std::tuple<std:
             }
 
             routes.emplace_back(path, root_dir, handler);
+        }
+        else{
+          routes.emplace_back("/", "/", std::make_shared<NotFoundHandler>());
         }
     }
 

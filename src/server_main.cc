@@ -38,9 +38,9 @@ int main(int argc, char* argv[])
     //parse argument as config file
     int port;
     std::vector<std::tuple<std::string, std::string, HandlerPtr>> routes;
-    if (!parseConfig(argv[1], port, routes)) {
-      return 1;
-    }
+    parseConfig(argv[1], port, routes);
+    //   return 1;
+    // }
 
     server srv(io_service, port, routes);
     BOOST_LOG_TRIVIAL(info) << "Server listening on port " << port;
