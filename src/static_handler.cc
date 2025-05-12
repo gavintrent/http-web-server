@@ -29,23 +29,53 @@ HttpResponse StaticHandler::handleRequest(const HttpRequest& req) {
   
   //accept only HTTP GET requests and setup response accordingly
   if (req.method == "GET") {
-    std::string path = root_dir_ + req.path; //map path
+    // get final directory name from root_dir_ (e.g. "static_files")
+    std::string base_dir = root_dir_;
+    auto pos = base_dir.find_last_of("/\\");
+    if (pos != std::string::npos) {
+      base_dir = base_dir.substr(pos + 1);
+    }
+    
+    // strip "/static_files" from the front of req.path
+    std::string prefix = "/" + base_dir;
+    std::string req_path;
+    if (req.path.rfind(prefix, 0) == 0) {
+      req_path = req.path.substr(prefix.size());
+    } else {
+      req_path = req.path;
+    }
+    // make sure we have leading slash
+    if (req_path.empty() || req_path[0] != '/') 
+      req_path = "/" + req_path;
+    
+    // actual file to open
+    std::string path = root_dir_ + req_path;//map path
+
 
     //find mime_type
-    std::string mime_type = "";
-    if (path.rfind(".html") != std::string::npos) {mime_type = "text/html";}
-    if (path.rfind(".txt") != std::string::npos) {mime_type = "text/plain";}
-    if (path.rfind(".jpg") != std::string::npos) {mime_type = "image/jpeg";}
-    if (path.rfind(".zip") != std::string::npos) {mime_type = "application/zip";}
-    if (mime_type == "") {
+    std::string mime_type;
+    auto ext = path.substr(path.rfind('.'));
+    if      (ext == ".html") mime_type = "text/html";
+    else if (ext == ".txt" ) mime_type = "text/plain";
+    else if (ext == ".jpg" ) mime_type = "image/jpeg";
+    else if (ext == ".zip" ) mime_type = "application/zip";
+    if (mime_type.empty()) {
         res.status_code = 404;
-    }
-    else {
-      std::ifstream file(path, std::ios::in | std::ios::binary);
-
-      //check if failed to open file
-      if (!file) {res.status_code = 404;}
-      else {
+    } else {
+      // else try open file at configured path
+      std::string file_path = path;
+      std::ifstream file(file_path, std::ios::in | std::ios::binary);
+      // If root_dir_ is absolute, also try sibling static_files from build directory
+      if (!file && !root_dir_.empty() && root_dir_[0] == '/') {
+          std::string alt_path = ".." + file_path;
+          file.open(alt_path, std::ios::in | std::ios::binary);
+          if (file) {
+              file_path = alt_path;
+          }
+      }
+      if (!file) {
+        res.status_code = 404;
+      } else {
         res.status_code = 200;
         res.headers["Content-Type"] = mime_type;
 
