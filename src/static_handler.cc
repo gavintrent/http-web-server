@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include "static_handler.h"
+#include "handler_registry.h"
 
 const std::string StaticHandler::kName = "StaticHandler";
 
@@ -91,3 +92,4 @@ HttpResponse StaticHandler::handleRequest(const HttpRequest& req) {
   //return HTTP response
   return res;
 }
+ REGISTER_HANDLER(StaticHandler)

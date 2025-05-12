@@ -1,4 +1,5 @@
 #include "not_found_handler.h"
+#include "handler_registry.h"
 
 HttpResponse NotFoundHandler::handleRequest(const HttpRequest& req){
     HttpResponse res;
@@ -7,3 +8,6 @@ HttpResponse NotFoundHandler::handleRequest(const HttpRequest& req){
     res.headers["Content-Length"] = "0";
     return res;
 }
+
+
+ REGISTER_HANDLER(NotFoundHandler)

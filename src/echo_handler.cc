@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include "echo_handler.h"
+#include "handler_registry.h"
 
 const std::string EchoHandler::kName = "EchoHandler";
 
@@ -39,3 +40,5 @@ HttpResponse EchoHandler::handleRequest(const HttpRequest& req) {
    res.headers["Content-Length"] = std::to_string(res.body.size());
    return res;
  }
+
+ REGISTER_HANDLER(EchoHandler)

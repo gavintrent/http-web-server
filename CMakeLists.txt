@@ -44,6 +44,9 @@ include_directories(include)
 # libraries go under here
 add_library(server_main_lib src/server_main.cc)
 add_library(server_lib src/server.cc)
+add_library(handler_registry
+  src/handler_registry.cc
+)
 add_library(session_lib src/session.cc)
 add_library(config_parser_lib src/config_parser.cc)
 add_library(echo_handler_lib src/echo_handler.cc)
@@ -51,6 +54,16 @@ add_library (not_found_handler_lib src/not_found_handler.cc)
 add_library(static_handler_lib src/static_handler.cc)
 add_library(request_parser_lib src/request_parser.cc)
 add_library(logger_lib src/logger.cc)
+
+target_link_libraries(echo_handler_lib
+  PUBLIC handler_registry
+)
+target_link_libraries(static_handler_lib
+  PUBLIC handler_registry
+)
+target_link_libraries(not_found_handler_lib
+  PUBLIC handler_registry
+)
 
 # executables go under here
 add_executable(server src/server_main.cc)
