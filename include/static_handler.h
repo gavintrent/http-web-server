@@ -5,13 +5,23 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
-
+#include <string>
+#include <map>
 #include "http_types.h"
 #include "request_handler.h"
 
 class StaticHandler : public RequestHandler {
 public:
-  HttpResponse handleRequest(const HttpRequest& req);
+  StaticHandler(const std::string& path, const std::string& root_dir);
+
+  HttpResponse handleRequest(const HttpRequest& req) override;
+
+  static RequestHandler* Create(const std::string& path, const std::map<std::string, std::string>& args);
+  static const std::string kName;
+
+protected:
+  std::string path_;
+  std::string root_dir_;
 };
 
 #endif

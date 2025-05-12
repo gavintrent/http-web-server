@@ -3,14 +3,20 @@
 #include <boost/system/error_code.hpp>
 #include <string>
 #include <map>
-
 #include "request_handler.h"
 
 /// Serves `/echo` URLs by echoing back the request body.
 class EchoHandler : public RequestHandler {
 public:
-  HttpResponse handleRequest(const HttpRequest& req);
+  explicit EchoHandler(const std::string& path);
+
+  HttpResponse handleRequest(const HttpRequest& req) override;
+  //factory method:
+  static RequestHandler* Create(const std::string& path, const std::map<std::string, std::string>& args);
+  static const std::string kName;
+
 protected:
+  std::string path_;
   // new hook
   virtual HttpResponse doEcho(const HttpRequest& req);
 };

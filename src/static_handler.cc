@@ -2,13 +2,26 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
-
 #include "static_handler.h"
+
+const std::string StaticHandler::kName = "StaticHandler";
+
+StaticHandler::StaticHandler(const std::string& path, const std::string& root_dir)
+  : path_(path), root_dir_(root_dir) {}
+
+RequestHandler* StaticHandler::Create(const std::string& path, const std::map<std::string, std::string>& args) {
+  auto it = args.find("root");
+  if (it == args.end()) return nullptr;
+  return new StaticHandler(path, it->second);
+}
+
+// for once registry is implemented:
+//static bool registered_static = Registry::RegisterHandler(StaticHandler::kName, StaticHandler::Create);
+
 
 HttpResponse StaticHandler::handleRequest(const HttpRequest& req) {
   //setup server response
@@ -16,7 +29,7 @@ HttpResponse StaticHandler::handleRequest(const HttpRequest& req) {
   
   //accept only HTTP GET requests and setup response accordingly
   if (req.method == "GET") {
-    std::string path = ".." + req.path; //map path
+    std::string path = root_dir_ + req.path; //map path
 
     //find mime_type
     std::string mime_type = "";

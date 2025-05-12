@@ -35,6 +35,7 @@ static HttpRequest makeRequest(const std::string& method = "GET",
 class DoEchoTest : public ::testing::Test {
 protected:
   struct TestEcho : public EchoHandler {
+    TestEcho() : EchoHandler("/test") {}
     using EchoHandler::doEcho;
   } handler;
 
@@ -46,6 +47,7 @@ protected:
 };
 
 struct MockEchoHandler : public EchoHandler {
+  MockEchoHandler() : EchoHandler("/mock") {}
   MOCK_METHOD(HttpResponse, doEcho, (const HttpRequest&), (override));
 };
 

@@ -10,6 +10,9 @@ class StaticHandlerTestFixture : public ::testing::Test {
 protected:
     StaticHandler handler;
 
+    StaticHandlerTestFixture()
+        : handler("/static", "../static_files") {}
+
     HttpRequest makeRequest(const std::string& method, const std::string& path) {
         HttpRequest req;
         req.method = method;
