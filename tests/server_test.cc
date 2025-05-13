@@ -13,8 +13,9 @@ using routes_t = std::vector<std::tuple<std::string, std::string, std::shared_pt
 // no-op RequestHandler so we can build a routes vector
 class DummyHandler : public RequestHandler {
  public:
-  HttpResponse handleRequest(const HttpRequest&) override {
-    return HttpResponse();
+  std::unique_ptr<HttpResponse>
+  handle_request(const HttpRequest& /*req*/) override {
+    return std::make_unique<HttpResponse>();
   }
 };
 

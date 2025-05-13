@@ -10,7 +10,7 @@ class EchoHandler : public RequestHandler {
 public:
   explicit EchoHandler(const std::string& path);
 
-  HttpResponse handleRequest(const HttpRequest& req) override;
+  std::unique_ptr<HttpResponse> handle_request(const HttpRequest& req) override;
   //factory method:
   static RequestHandler* Create(const std::string& path, const std::map<std::string, std::string>& args);
   static const std::string kName;
@@ -18,7 +18,7 @@ public:
 protected:
   std::string path_;
   // new hook
-  virtual HttpResponse doEcho(const HttpRequest& req);
+  virtual std::unique_ptr<HttpResponse> doEcho(const HttpRequest& req);
 };
 
 #endif

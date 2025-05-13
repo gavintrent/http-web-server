@@ -6,6 +6,7 @@
 #include "request_parser.h"
 #include <boost/system/error_code.hpp>
 #include "http_types.h" 
+#include <memory>
 
 using ::testing::_;
 using ::testing::Ref;
@@ -48,29 +49,29 @@ protected:
 
 struct MockEchoHandler : public EchoHandler {
   MockEchoHandler() : EchoHandler("/mock") {}
-  MOCK_METHOD(HttpResponse, doEcho, (const HttpRequest&), (override));
+  MOCK_METHOD(std::unique_ptr<HttpResponse>, doEcho, (const HttpRequest&), (override));
 };
 
 TEST(EchoHandlerTest, HandleGetAndReturnResponseMock) {
     MockEchoHandler mock;
     HttpRequest req = makeRequest("GET", "/test", "hello");
 
-    HttpResponse fakeResp;
-    fakeResp.status_code = 200;
-    fakeResp.headers = {
+    auto fakeResp = std::make_unique<HttpResponse>();
+    fakeResp->status_code = 200;
+    fakeResp->headers = {
         {"Content-Type", "text/plain"},
         {"Content-Length", std::to_string(req.raw.size())}
     };
-    fakeResp.body = req.raw;
+    fakeResp->body = req.raw;
 
     EXPECT_CALL(mock, doEcho(Ref(req)))
-        .WillOnce(Return(fakeResp));
+         .WillOnce(Return(testing::ByMove(std::move(fakeResp))));
 
-    HttpResponse out = mock.handleRequest(req);
-    EXPECT_EQ(out.status_code, fakeResp.status_code);
-    EXPECT_EQ(out.headers,     fakeResp.headers);
-    EXPECT_EQ(out.body,        fakeResp.body);
-    EXPECT_EQ(out.body.size(), fakeResp.body.size());
+    std::unique_ptr<HttpResponse> out = mock.handle_request(req);
+    EXPECT_EQ(out->status_code, 200);
+    EXPECT_EQ(out->headers, (std::map<std::string,std::string>{{"Content-Type", "text/plain"},{"Content-Length", std::to_string(req.raw.size())}}));
+    EXPECT_EQ(out->body,        req.raw);
+    EXPECT_EQ(out->body.size(), req.raw.size());
 
 }
 
@@ -79,8 +80,8 @@ TEST(EchoHandlerTest, HandleNonGETAndReturns400Mock) {
     HttpRequest req = makeRequest("POST", "/");
     EXPECT_CALL(mock, doEcho(_)).Times(0);
 
-    HttpResponse out = mock.handleRequest(req);
-    EXPECT_EQ(out.status_code, 400);
+    std::unique_ptr<HttpResponse> out = mock.handle_request(req);
+    EXPECT_EQ(out->status_code, 400);
 }
 
 // test special characters in request
@@ -88,22 +89,22 @@ TEST(EchoHandlerTest, HandleGetSpecialCharacterAndReturnResponseMock) {
     MockEchoHandler mock;
     HttpRequest req = makeRequest("GET", "/search", "?q=hello%20world&lang=en");
 
-    HttpResponse fakeResp;
-    fakeResp.status_code = 200;
-    fakeResp.headers = {
+    auto fakeResp = std::make_unique<HttpResponse>();
+    fakeResp->status_code = 200;
+    fakeResp->headers = {
         {"Content-Type", "text/plain"},
         {"Content-Length", std::to_string(req.raw.size())}
     };
-    fakeResp.body = req.raw;
+    fakeResp->body = req.raw;
 
     EXPECT_CALL(mock, doEcho(Ref(req)))
-        .WillOnce(Return(fakeResp));
+        .WillOnce(Return(testing::ByMove(std::move(fakeResp))));
 
-    HttpResponse out = mock.handleRequest(req);
-    EXPECT_EQ(out.status_code, fakeResp.status_code);
-    EXPECT_EQ(out.headers,     fakeResp.headers);
-    EXPECT_EQ(out.body,        fakeResp.body);
-    EXPECT_EQ(out.body.size(), fakeResp.body.size());
+    std::unique_ptr<HttpResponse> out = mock.handle_request(req);
+    EXPECT_EQ(out->status_code, 200);
+    EXPECT_EQ(out->headers, (std::map<std::string,std::string>{{"Content-Type", "text/plain"},{"Content-Length", std::to_string(req.raw.size())}}));
+    EXPECT_EQ(out->body,        req.raw);
+    EXPECT_EQ(out->body.size(), req.raw.size());
 
 }
 
@@ -111,41 +112,41 @@ TEST(EchoHandlerTest, HandleEmptyAndReturnResponseMock) {
     MockEchoHandler mock;
     HttpRequest req = makeRequest("GET", "/test", "");
 
-    HttpResponse fakeResp;
-    fakeResp.status_code = 200;
-    fakeResp.headers = {
+    auto fakeResp = std::make_unique<HttpResponse>();
+    fakeResp->status_code = 200;
+    fakeResp->headers = {
         {"Content-Type", "text/plain"},
         {"Content-Length", std::to_string(req.raw.size())}
     };
-    fakeResp.body = req.raw;
+    fakeResp->body = req.raw;
 
     EXPECT_CALL(mock, doEcho(Ref(req)))
-        .WillOnce(Return(fakeResp));
+        .WillOnce(Return(testing::ByMove(std::move(fakeResp))));
 
-    HttpResponse out = mock.handleRequest(req);
-    EXPECT_EQ(out.status_code, fakeResp.status_code);
-    EXPECT_EQ(out.headers,     fakeResp.headers);
-    EXPECT_EQ(out.body,        fakeResp.body);
-    EXPECT_EQ(out.body.size(), fakeResp.body.size());
+    std::unique_ptr<HttpResponse> out = mock.handle_request(req);
+    EXPECT_EQ(out->status_code, 200);
+    EXPECT_EQ(out->headers, (std::map<std::string,std::string>{{"Content-Type", "text/plain"},{"Content-Length", std::to_string(req.raw.size())}}));
+    EXPECT_EQ(out->body,        req.raw);
+    EXPECT_EQ(out->body.size(), req.raw.size());
 
 }
 
 TEST_F(DoEchoTest, BasicEcho) {
   const std::string raw = "GET /foo/bar HTTP/1.1\r\nHost: localhost\r\n\r\nhello";
-  HttpResponse resp = handler.doEcho(makeReq(raw));
+  std::unique_ptr<HttpResponse> resp = handler.doEcho(makeReq(raw));
 
-  EXPECT_EQ(resp.status_code, 200);
-  EXPECT_EQ(resp.body,        raw);
-  EXPECT_EQ(resp.headers["Content-Type"],   "text/plain");
-  EXPECT_EQ(resp.headers["Content-Length"], std::to_string(raw.size()));
+  EXPECT_EQ(resp->status_code, 200);
+  EXPECT_EQ(resp->body,        raw);
+  EXPECT_EQ(resp->headers["Content-Type"],   "text/plain");
+  EXPECT_EQ(resp->headers["Content-Length"], std::to_string(raw.size()));
 }
 
 
 TEST_F(DoEchoTest, EmptyRaw) {
-  HttpResponse resp = handler.doEcho(makeReq(""));
+  std::unique_ptr<HttpResponse> resp = handler.doEcho(makeReq(""));
 
-  EXPECT_EQ(resp.status_code, 200);
-  EXPECT_EQ(resp.body,        "");
-  EXPECT_EQ(resp.headers["Content-Type"],   "text/plain");
-  EXPECT_EQ(resp.headers["Content-Length"], "0");
+  EXPECT_EQ(resp->status_code, 200);
+  EXPECT_EQ(resp->body,        "");
+  EXPECT_EQ(resp->headers["Content-Type"],   "text/plain");
+  EXPECT_EQ(resp->headers["Content-Length"], "0");
 }

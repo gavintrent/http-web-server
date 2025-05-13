@@ -21,23 +21,23 @@ RequestHandler* EchoHandler::Create(const std::string& path, const std::map<std:
 // once registry is implemented:
 // static bool registered_echo = Registry::RegisterHandler(EchoHandler::kName, EchoHandler::Create);
 
-HttpResponse EchoHandler::handleRequest(const HttpRequest& req) {
-  HttpResponse res;
+std::unique_ptr<HttpResponse> EchoHandler::handle_request(const HttpRequest& req) {
+  auto res = std::make_unique<HttpResponse>();
   if (req.method == "GET") {
     return doEcho(req);
   } else {
-    res.status_code = 400;
+    res->status_code = 400;
   }
-  res.headers["Content-Length"] = std::to_string(res.body.size());
+  res->headers["Content-Length"] = std::to_string(res->body.size());
   return res;
 }
 
- HttpResponse EchoHandler::doEcho(const HttpRequest& req) {
-   HttpResponse res;
-   res.status_code = 200;
-   res.body        = req.raw;
-   res.headers["Content-Type"] = "text/plain";
-   res.headers["Content-Length"] = std::to_string(res.body.size());
+ std::unique_ptr<HttpResponse> EchoHandler::doEcho(const HttpRequest& req) {
+   auto res = std::make_unique<HttpResponse>();
+   res->status_code = 200;
+   res->body        = req.raw;
+   res->headers["Content-Type"] = "text/plain";
+   res->headers["Content-Length"] = std::to_string(res->body.size());
    return res;
  }
 

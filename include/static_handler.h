@@ -14,7 +14,7 @@ class StaticHandler : public RequestHandler {
 public:
   StaticHandler(const std::string& path, const std::string& root_dir);
 
-  HttpResponse handleRequest(const HttpRequest& req) override;
+  std::unique_ptr<HttpResponse> handle_request(const HttpRequest& req) override;
 
   static RequestHandler* Create(const std::string& path, const std::map<std::string, std::string>& args);
   static const std::string kName;

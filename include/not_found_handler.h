@@ -5,5 +5,5 @@
 
 class NotFoundHandler : public RequestHandler {
 public:
-  HttpResponse handleRequest(const HttpRequest& req);
+  std::unique_ptr<HttpResponse> handle_request(const HttpRequest& req);
 };

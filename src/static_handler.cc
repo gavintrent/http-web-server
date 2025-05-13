@@ -24,9 +24,9 @@ RequestHandler* StaticHandler::Create(const std::string& path, const std::map<st
 //static bool registered_static = Registry::RegisterHandler(StaticHandler::kName, StaticHandler::Create);
 
 
-HttpResponse StaticHandler::handleRequest(const HttpRequest& req) {
+std::unique_ptr<HttpResponse> StaticHandler::handle_request(const HttpRequest& req) {
   //setup server response
-  HttpResponse res;
+  auto res = std::make_unique<HttpResponse>();
   
   //accept only HTTP GET requests and setup response accordingly
   if (req.method == "GET") {
@@ -61,7 +61,7 @@ HttpResponse StaticHandler::handleRequest(const HttpRequest& req) {
     else if (ext == ".jpg" ) mime_type = "image/jpeg";
     else if (ext == ".zip" ) mime_type = "application/zip";
     if (mime_type.empty()) {
-        res.status_code = 404;
+        res->status_code = 404;
     } else {
       // else try open file at configured path
       std::string file_path = path;
@@ -75,19 +75,19 @@ HttpResponse StaticHandler::handleRequest(const HttpRequest& req) {
           }
       }
       if (!file) {
-        res.status_code = 404;
+        res->status_code = 404;
       } else {
-        res.status_code = 200;
-        res.headers["Content-Type"] = mime_type;
+        res->status_code = 200;
+        res->headers["Content-Type"] = mime_type;
 
         std::stringstream buf;
         buf << file.rdbuf();
-        res.body = buf.str();
+        res->body = buf.str();
       }
     }
     
   }
-  else {res.status_code = 400;}
+  else {res->status_code = 400;}
 
   //return HTTP response
   return res;

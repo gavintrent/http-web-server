@@ -51,10 +51,10 @@ void session::handle_read(const boost::system::error_code& ec,
   boost::system::error_code parse_ec;
   auto req = parser_.parse(data_, bytes_transferred, parse_ec);
 
-  HttpResponse app_res;
+  std::unique_ptr<HttpResponse> app_res;
   if (parse_ec) {
     BOOST_LOG_TRIVIAL(error) << "Failed to parse HTTP request: " << parse_ec.message();
-    app_res.status_code = 400;
+    app_res->status_code = 400;
   } else {
     BOOST_LOG_TRIVIAL(debug) << "Parsed request, routing...";
     
@@ -62,7 +62,7 @@ void session::handle_read(const boost::system::error_code& ec,
     for (auto& [prefix, new_prefix, handler] : routes_) {
       if (req.path.find(prefix, 0) == 0) {
         req.path.replace(0, prefix.length(), new_prefix);
-        app_res = handler->handleRequest(req);
+        app_res = handler->handle_request(req);
         handled = true;
         break;
       }
@@ -70,12 +70,12 @@ void session::handle_read(const boost::system::error_code& ec,
   }
 
   // Build Beast response
-  response.result((http::status)app_res.status_code);
-  response.body() = std::move(app_res.body);
-  response.set(http::field::content_type, app_res.headers["Content-Type"]);
+  response.result((http::status)app_res->status_code);
+  response.body() = std::move(app_res->body);
+  response.set(http::field::content_type, app_res->headers["Content-Type"]);
   response.prepare_payload();
 
-  BOOST_LOG_TRIVIAL(debug) << "Sending response with status code: " << app_res.status_code;
+  BOOST_LOG_TRIVIAL(debug) << "Sending response with status code: " << app_res->status_code;
 
   http::async_write(socket_, response,
     boost::bind(&session::handle_write, this,
