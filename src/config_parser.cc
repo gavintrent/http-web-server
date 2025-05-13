@@ -19,6 +19,8 @@
 #include <map>
 
 #include "config_parser.h"
+#include "handler_registry.h"
+#include "not_found_handler.h"
 
 // ========================================
 // Namespace
@@ -320,25 +322,22 @@ bool parseConfig(const char* config_file, int& port, std::vector<std::tuple<std:
                     }
                 }
             }
+            std::vector<std::string> args;
+            args.push_back(path);
 
             // Get root dir from child { ... } block
             std::string root_dir = "";
             for (const auto& arg_stmt : stmt->child_block_->statements_) {
               if (arg_stmt->tokens_.size() >= 2 && arg_stmt->tokens_[0] == "root") {
                 root_dir = arg_stmt->tokens_[1];
+                args.push_back(root_dir);
               }
             }
 
-            // Get handler instance
-            // TODO: set handler using something like
-            // auto factory = Registry::Lookup(handler_name); 
-            // auto handler = factory(path, args);
-            // once registry is done
-            std::shared_ptr<RequestHandler> handler;
-            if (handler_type == "EchoHandler") {
-                handler = std::make_shared<EchoHandler>("/echo");
-            } else if (handler_type == "StaticHandler") {
-                handler = std::make_shared<StaticHandler>(path, root_dir);
+            std::shared_ptr<RequestHandler> handler = HandlerRegistry::instance().createHandler(handler_type, args);
+            if (!handler || dynamic_cast<NotFoundHandler*>(handler.get()) != nullptr) {
+                BOOST_LOG_TRIVIAL(warning) << "Unknown handler type: " << handler_type << ", defaulting to NotFoundHandler.";
+                handler = std::make_shared<NotFoundHandler>("/");
             }
 
             routes.emplace_back(path, root_dir, handler);
