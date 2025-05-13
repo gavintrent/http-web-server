@@ -33,7 +33,6 @@ int main(int argc, char* argv[])
     }
 
     boost::asio::io_service io_service;
-    auto echo_handler = std::make_shared<EchoHandler>("/echo");
     
     //parse argument as config file
     int port;
