@@ -5,7 +5,7 @@
 #include "http_types.h"   
 
 TEST(NotFoundHandlerTest, Returns404) {
-    NotFoundHandler handler;
+    NotFoundHandler handler{"/"};
     HttpRequest req;
 
     auto res = handler.handle_request(req);
@@ -18,7 +18,7 @@ TEST(NotFoundHandlerTest, Returns404) {
 }
 
 TEST(NotFoundHandlerTest, IgnoresContent) {
-    NotFoundHandler handler;
+    NotFoundHandler handler{"/"};
     HttpRequest req;
 
     req.method  = "POST";
@@ -34,7 +34,7 @@ TEST(NotFoundHandlerTest, IgnoresContent) {
 }
 
 TEST(NotFoundHandlerTest, ReturnsDifferentInstances) {
-    NotFoundHandler handler;
+    NotFoundHandler handler {"/"};
     HttpRequest req;
 
     auto r1 = handler.handle_request(req);

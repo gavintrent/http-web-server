@@ -1,14 +1,23 @@
 #include "handler_registry.h"
 
-std::vector<std::string>& HandlerRegistry::registry() { //gives most up to date registry to all handlers
-  static std::vector<std::string> inst;
+HandlerRegistry& HandlerRegistry::instance() {
+  static HandlerRegistry inst;
   return inst;
 }
 
-void HandlerRegistry::registerHandler(const std::string& name) {
-  registry().push_back(name);
+HandlerRegistry::HandlerRegistry() = default;
+
+bool HandlerRegistry::registerHandler(const std::string& name,
+                                       Factory factory) {
+  factories[name] = std::move(factory);
+  return true;
 }
 
-std::vector<std::string> HandlerRegistry::getRegisteredNames() {
-  return registry();
+HandlerRegistry::HandlerPtr
+HandlerRegistry::createHandler(const std::string& name,
+                               const std::vector<std::string>& args) const {
+  auto it = factories.find(name);
+  if (it == factories.end()) return nullptr;
+  return it->second(args);
 }
+

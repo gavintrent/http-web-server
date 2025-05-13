@@ -344,7 +344,7 @@ bool parseConfig(const char* config_file, int& port, std::vector<std::tuple<std:
             routes.emplace_back(path, root_dir, handler);
         }
     }
-    routes.emplace_back("/", "/", std::make_shared<NotFoundHandler>());
+    routes.emplace_back("/", "/", std::make_shared<NotFoundHandler>("/"));
 
     return true;
 }

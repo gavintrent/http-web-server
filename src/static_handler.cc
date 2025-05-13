@@ -92,4 +92,14 @@ std::unique_ptr<HttpResponse> StaticHandler::handle_request(const HttpRequest& r
   //return HTTP response
   return res;
 }
- REGISTER_HANDLER(StaticHandler)
+
+static const bool staticRegistered =
+  HandlerRegistry::instance()
+    .registerHandler(
+      StaticHandler::kName,       
+      [](auto const& args) {     
+        return std::make_unique<StaticHandler>(
+          args.at(0), args.at(1)
+        );
+      }
+    );

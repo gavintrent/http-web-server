@@ -41,4 +41,14 @@ std::unique_ptr<HttpResponse> EchoHandler::handle_request(const HttpRequest& req
    return res;
  }
 
- REGISTER_HANDLER(EchoHandler)
+
+static const bool echoRegistered =
+  HandlerRegistry::instance()
+    .registerHandler(
+      EchoHandler::kName,    
+      [](auto const& args) {        
+        return std::make_unique<EchoHandler>(
+          args.at(0)
+        );
+      }
+    );
