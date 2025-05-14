@@ -13,14 +13,6 @@ const std::string EchoHandler::kName = "EchoHandler";
 
 EchoHandler::EchoHandler(const std::string& path) : path_(path) {}
 
-RequestHandler* EchoHandler::Create(const std::string& path, const std::map<std::string, std::string>& args) {
-  if (!args.empty()) return nullptr;
-  return new EchoHandler(path);
-}
-
-// once registry is implemented:
-// static bool registered_echo = Registry::RegisterHandler(EchoHandler::kName, EchoHandler::Create);
-
 std::unique_ptr<HttpResponse> EchoHandler::handle_request(const HttpRequest& req) {
   auto res = std::make_unique<HttpResponse>();
   if (req.method == "GET") {

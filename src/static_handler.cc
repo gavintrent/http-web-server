@@ -14,16 +14,6 @@ const std::string StaticHandler::kName = "StaticHandler";
 StaticHandler::StaticHandler(const std::string& path, const std::string& root_dir)
   : path_(path), root_dir_(root_dir) {}
 
-RequestHandler* StaticHandler::Create(const std::string& path, const std::map<std::string, std::string>& args) {
-  auto it = args.find("root");
-  if (it == args.end()) return nullptr;
-  return new StaticHandler(path, it->second);
-}
-
-// for once registry is implemented:
-//static bool registered_static = Registry::RegisterHandler(StaticHandler::kName, StaticHandler::Create);
-
-
 std::unique_ptr<HttpResponse> StaticHandler::handle_request(const HttpRequest& req) {
   //setup server response
   auto res = std::make_unique<HttpResponse>();
