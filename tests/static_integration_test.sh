@@ -13,10 +13,7 @@ RESPONSE_FILE=$(mktemp)
 
 # Create minimal config file
 cat > "$CONFIG_FILE" <<EOF 
-port 8080;
-
-location /echo EchoHandler {
-}
+port $PORT;
 
 location /static1 StaticHandler {
   root /static_files;

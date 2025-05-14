@@ -22,6 +22,8 @@
 #include "handler_registry.h"
 #include "not_found_handler.h"
 
+#include "dispatcher.h"
+
 // ========================================
 // Namespace
 // ========================================
@@ -282,7 +284,7 @@ bool NginxConfigParser::Parse(const char* file_name, NginxConfig* config) {
 }
 
 using HandlerPtr = std::shared_ptr<RequestHandler>;
-bool parseConfig(const char* config_file, int& port, std::vector<std::tuple<std::string, std::string, HandlerPtr>>& routes) {
+bool parseConfig(const char* config_file, int& port) {
     NginxConfigParser parser;
     NginxConfig config;
 
@@ -334,16 +336,17 @@ bool parseConfig(const char* config_file, int& port, std::vector<std::tuple<std:
               }
             }
 
-            std::shared_ptr<RequestHandler> handler = HandlerRegistry::instance().createHandler(handler_type, args);
-            if (!handler || dynamic_cast<NotFoundHandler*>(handler.get()) != nullptr) {
-                BOOST_LOG_TRIVIAL(warning) << "Unknown handler type: " << handler_type << ", defaulting to NotFoundHandler.";
-                handler = std::make_shared<NotFoundHandler>("/");
-            }
-
-            routes.emplace_back(path, root_dir, handler);
+            //Add new route to dispatcher
+            Dispatcher::registerRoute(path, [=]() {
+              return HandlerRegistry::instance().createHandler(handler_type, args);
+            });
         }
     }
-    routes.emplace_back("/", "/", std::make_shared<NotFoundHandler>("/"));
+    
+    //Hardcode NotFoundHandler to serve "/"
+    Dispatcher::registerRoute("/", [=]() {
+      return HandlerRegistry::instance().createHandler("NotFoundHandler", {"/"});
+    });
 
     return true;
 }

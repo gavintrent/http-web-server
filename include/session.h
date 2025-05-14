@@ -19,7 +19,7 @@ namespace http = boost::beast::http;
 class session
 {
 public:
-  session(boost::asio::io_service& io_service, const std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>>& routes);
+  session(boost::asio::io_service& io_service);
   tcp::socket& socket();
   virtual void start();
   virtual ~session() = default;
@@ -35,6 +35,5 @@ private:
   http::response<http::string_body> response;
   RequestParser parser_;
   RequestHandler* handler_;
-  std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>> routes_;
 };
 #endif

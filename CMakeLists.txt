@@ -44,16 +44,21 @@ include_directories(include)
 # libraries go under here
 add_library(server_main_lib src/server_main.cc)
 add_library(server_lib src/server.cc)
-add_library(handler_registry
-  src/handler_registry.cc
-)
+add_library(handler_registry src/handler_registry.cc)
 add_library(session_lib src/session.cc)
 add_library(config_parser_lib src/config_parser.cc)
+add_library(request_parser_lib src/request_parser.cc)
+add_library(logger_lib src/logger.cc)
+add_library(dispatcher_lib src/dispatcher.cc)
+
+#handler libraries
 add_library(echo_handler_lib OBJECT src/echo_handler.cc)
 add_library (not_found_handler_lib OBJECT src/not_found_handler.cc)
 add_library(static_handler_lib OBJECT src/static_handler.cc)
-add_library(request_parser_lib src/request_parser.cc)
-add_library(logger_lib src/logger.cc)
+
+#link dispatcher
+target_link_libraries(config_parser_lib dispatcher_lib)
+target_link_libraries(session_lib dispatcher_lib)
 
 target_link_libraries(echo_handler_lib
   PUBLIC handler_registry
@@ -92,6 +97,9 @@ target_link_libraries(static_handler_test static_handler_lib request_parser_lib 
 add_executable(request_parser_test tests/request_parser_test.cc)
 target_link_libraries(request_parser_test request_parser_lib gtest_main)
 
+add_executable(dispatcher_test tests/dispatcher_test.cc)
+target_link_libraries(dispatcher_test dispatcher_lib gtest_main gmock_main)
+
 add_executable(parse_common_api_test tests/parse_common_api_test.cc)
 target_link_libraries(parse_common_api_test 
   config_parser_lib 
@@ -128,6 +136,7 @@ gtest_discover_tests(echo_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_
 gtest_discover_tests(not_found_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(static_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(request_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(dispatcher_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(server_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(logger_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
@@ -144,14 +153,17 @@ generate_coverage_report(
     not_found_handler_lib 
     static_handler_lib
     logger_lib
+    dispatcher_lib
   TESTS 
     config_parser_test
     echo_handler_test
     static_handler_test
+    not_found_handler_test
     request_parser_test
     server_test
     logger_test
     parse_common_api_test
+    dispatcher_test
   )
 
 # Bash integration test for the echo server

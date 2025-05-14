@@ -22,7 +22,7 @@ protected:
 };
 
 TEST_F(StaticHandlerTestFixture, GetHTML) {
-    HttpRequest req = makeRequest("GET", "/static_files/test.html");
+    HttpRequest req = makeRequest("GET", "/static/test.html");
     std::unique_ptr<HttpResponse> response = handler.handle_request(req);
     
     EXPECT_TRUE(response->status_code == 200);
@@ -31,7 +31,7 @@ TEST_F(StaticHandlerTestFixture, GetHTML) {
 
 // test getting jpeg
 TEST_F(StaticHandlerTestFixture, GetJPEG) {
-    HttpRequest req = makeRequest("GET", "/static_files/test.jpg");
+    HttpRequest req = makeRequest("GET", "/static/test.jpg");
     std::unique_ptr<HttpResponse> response = handler.handle_request(req);
     
     EXPECT_TRUE(response->status_code == 200);
@@ -40,7 +40,7 @@ TEST_F(StaticHandlerTestFixture, GetJPEG) {
 
 // test getting txt
 TEST_F(StaticHandlerTestFixture, GetTXT) {
-    HttpRequest req = makeRequest("GET", "/static_files/test.txt");
+    HttpRequest req = makeRequest("GET", "/static/test.txt");
     std::unique_ptr<HttpResponse> response = handler.handle_request(req);
     
     EXPECT_TRUE(response->status_code == 200);
@@ -49,7 +49,7 @@ TEST_F(StaticHandlerTestFixture, GetTXT) {
 
 // test getting zip
 TEST_F(StaticHandlerTestFixture, GetZIP) {
-    HttpRequest req = makeRequest("GET", "/static_files/test.zip");
+    HttpRequest req = makeRequest("GET", "/static/test.zip");
     std::unique_ptr<HttpResponse> response = handler.handle_request(req);
     
     EXPECT_TRUE(response->status_code == 200);
@@ -58,7 +58,7 @@ TEST_F(StaticHandlerTestFixture, GetZIP) {
 
 // test non-GET request
 TEST_F(StaticHandlerTestFixture, NonGETRequest) {
-    HttpRequest req = makeRequest("POST", "/static_files/test.html");
+    HttpRequest req = makeRequest("POST", "/static/test.html");
     std::unique_ptr<HttpResponse> response = handler.handle_request(req);
     
     EXPECT_TRUE(response->status_code == 400);
@@ -66,7 +66,7 @@ TEST_F(StaticHandlerTestFixture, NonGETRequest) {
 
 // test bad target path
 TEST_F(StaticHandlerTestFixture, BadPath) {
-    HttpRequest req = makeRequest("GET", "/bad_path");
+    HttpRequest req = makeRequest("GET", "/static/bad_path");
     std::unique_ptr<HttpResponse> response = handler.handle_request(req);
     
     EXPECT_TRUE(response->status_code == 404);

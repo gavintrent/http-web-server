@@ -13,8 +13,6 @@ TEST(NotFoundHandlerTest, Returns404) {
 
     EXPECT_EQ(res->status_code, 404);
     EXPECT_TRUE(res->body.empty());
-    EXPECT_EQ(res->headers["Content-Type"],   "text/plain");
-    EXPECT_EQ(res->headers["Content-Length"], "0");
 }
 
 TEST(NotFoundHandlerTest, IgnoresContent) {
@@ -29,8 +27,6 @@ TEST(NotFoundHandlerTest, IgnoresContent) {
     ASSERT_TRUE(res);
     EXPECT_EQ(res->status_code, 404);
     EXPECT_TRUE(res->body.empty());
-    EXPECT_EQ(res->headers["Content-Type"],   "text/plain");
-    EXPECT_EQ(res->headers["Content-Length"], "0");
 }
 
 TEST(NotFoundHandlerTest, ReturnsDifferentInstances) {

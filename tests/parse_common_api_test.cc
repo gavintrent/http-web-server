@@ -28,12 +28,10 @@ TEST_F(CommmonAPIConfigParserTest, WorkingConfigParse) {
   )");
 
   int port;
-  std::vector<std::tuple<std::string, std::string, HandlerPtr>> routes;
-  bool success = parseConfig(config_file.c_str(), port, routes);
+  bool success = parseConfig(config_file.c_str(), port);
 
   EXPECT_TRUE(success);
   EXPECT_EQ(port, 8080);
-  EXPECT_EQ(routes.size(), 2);
 }
 
 TEST_F(CommmonAPIConfigParserTest, DuplicateLocationFails) {
@@ -49,8 +47,7 @@ TEST_F(CommmonAPIConfigParserTest, DuplicateLocationFails) {
   )");
 
   int port;
-  std::vector<std::tuple<std::string, std::string, HandlerPtr>> routes;
-  bool success = parseConfig(config_file.c_str(), port, routes);
+  bool success = parseConfig(config_file.c_str(), port);
 
   EXPECT_FALSE(success);
 }
@@ -65,8 +62,7 @@ TEST_F(CommmonAPIConfigParserTest, TrailingSlashFails) {
   )");
 
   int port;
-  std::vector<std::tuple<std::string, std::string, HandlerPtr>> routes;
-  bool success = parseConfig(config_file.c_str(), port, routes);
+  bool success = parseConfig(config_file.c_str(), port);
 
   EXPECT_FALSE(success);
 }
@@ -80,8 +76,7 @@ TEST_F(CommmonAPIConfigParserTest, UnknownHandlerFails) {
   )");
 
   int port;
-  std::vector<std::tuple<std::string, std::string, HandlerPtr>> routes;
-  bool success = parseConfig(config_file.c_str(), port, routes);
+  bool success = parseConfig(config_file.c_str(), port);
 
   EXPECT_FALSE(success);
 }
@@ -96,8 +91,7 @@ TEST_F(CommmonAPIConfigParserTest, MissingRootInStaticHandler) {
   )");
 
   int port;
-  std::vector<std::tuple<std::string, std::string, HandlerPtr>> routes;
-  bool success = parseConfig(config_file.c_str(), port, routes);
+  bool success = parseConfig(config_file.c_str(), port);
 
   // If your implementation requires root in child block:
   EXPECT_FALSE(success);

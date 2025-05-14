@@ -14,7 +14,7 @@ RESPONSE_HEADERS=$(mktemp)
 
 # Create minimal config file
 cat > "$CONFIG_FILE" <<EOF 
-port 8080;
+port $PORT;
 
 location /echo EchoHandler {
 }

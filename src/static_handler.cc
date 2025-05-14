@@ -30,32 +30,17 @@ std::unique_ptr<HttpResponse> StaticHandler::handle_request(const HttpRequest& r
   
   //accept only HTTP GET requests and setup response accordingly
   if (req.method == "GET") {
-    // get final directory name from root_dir_ (e.g. "static_files")
-    std::string base_dir = root_dir_;
-    auto pos = base_dir.find_last_of("/\\");
-    if (pos != std::string::npos) {
-      base_dir = base_dir.substr(pos + 1);
-    }
-    
-    // strip "/static_files" from the front of req.path
-    std::string prefix = "/" + base_dir;
-    std::string req_path;
-    if (req.path.rfind(prefix, 0) == 0) {
-      req_path = req.path.substr(prefix.size());
-    } else {
-      req_path = req.path;
-    }
-    // make sure we have leading slash
-    if (req_path.empty() || req_path[0] != '/') 
-      req_path = "/" + req_path;
-    
-    // actual file to open
-    std::string path = root_dir_ + req_path;//map path
-
+    std::string path = req.path;
+    path.replace(0, path_.length(), root_dir_); //replace url prefix with root
 
     //find mime_type
     std::string mime_type;
-    auto ext = path.substr(path.rfind('.'));
+    auto ext_pos = path.rfind('.');
+    if (ext_pos == std::string::npos) { 
+        res->status_code = 404;
+        return res;
+    }
+    auto ext = path.substr(ext_pos);
     if      (ext == ".html") mime_type = "text/html";
     else if (ext == ".txt" ) mime_type = "text/plain";
     else if (ext == ".jpg" ) mime_type = "image/jpeg";

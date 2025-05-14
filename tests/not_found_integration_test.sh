@@ -11,7 +11,6 @@ RESPONSE_HEADERS=$(mktemp)
 # Minimal config: only our three handlers
 cat > "$CONFIG_FILE" <<EOF
 port $PORT;
-location /;
 EOF
 
 # Launch server

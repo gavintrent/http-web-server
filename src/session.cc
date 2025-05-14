@@ -4,6 +4,7 @@
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/log/trivial.hpp>
+#include "dispatcher.h"
 
 using boost::asio::ip::tcp;
 
@@ -12,9 +13,8 @@ namespace http = boost::beast::http;
 #include "session.h"
 #include "echo_handler.h"
 
-session::session(boost::asio::io_service& io_service, const std::vector<std::tuple<std::string,std::string,std::shared_ptr<RequestHandler>>>& routes)
-  : socket_(io_service),
-    routes_(routes)
+session::session(boost::asio::io_service& io_service)
+  : socket_(io_service)
 {
 }
 
@@ -57,16 +57,8 @@ void session::handle_read(const boost::system::error_code& ec,
     app_res->status_code = 400;
   } else {
     BOOST_LOG_TRIVIAL(debug) << "Parsed request, routing...";
-    
-    bool handled = false;
-    for (auto& [prefix, new_prefix, handler] : routes_) {
-      if (req.path.find(prefix, 0) == 0) {
-        req.path.replace(0, prefix.length(), new_prefix);
-        app_res = handler->handle_request(req);
-        handled = true;
-        break;
-      }
-    }
+
+    app_res = Dispatcher::match(req.path)->handle_request(req);
   }
 
   // Build Beast response
