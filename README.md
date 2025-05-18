@@ -1,7 +1,7 @@
 # Code Layout
 * server_main.cc
 
-  Contains main method. Initilizes the server by passing the given config file to the `config_parser` and creating a new `server` object.
+  Contains main method. Initializes the server by passing the given config file to the `config_parser` and creating a new `server` object.
 
 * config_parser.cc
 
@@ -22,6 +22,14 @@
 * echo_handler.cc, static_handler.cc, not_found_handler.cc
 
   Request handlers. Each handler inherits from the `request_handler.h` header file. They are created per request by the `dispatcher`.
+
+* api_handler.h, api_handler.cc
+
+  Implements the CRUD “/api” handler (depends on FileStore).
+
+* file_store.h, disk_file_store.h
+
+  Abstraction + disk-backed implementation for the ApiHandler’s storage.
 
 * request_parser.cc
 
@@ -238,6 +246,59 @@ static const bool notFoundRegistered =
     );
 ```
 
+### ApiHandler
+
+Handles Create/Read/Update/Delete over JSON for arbitrary “Entity” types,
+mounted at a given prefix and backed by a FileStore.
+
+## Brief
+
+- **Mount point**: args[0] = URL prefix (e.g. `/api`)  
+- **Data path**: args[1] = filesystem root for JSON files
+
+## Constructor
+
+```cpp
+ApiHandler(const std::string& mount,
+           std::shared_ptr<FileStore> store);
+```
+
+## Registration
+
+```cpp
+static bool apiRegistered =
+  HandlerRegistry::instance()
+    .registerHandler(
+      ApiHandler::kName,
+      [](auto const& args) {
+        // args[0] == mount
+        // args[1] == data_path
+        auto store = std::make_shared<DiskFileStore>(args.at(1));
+        return std::make_unique<ApiHandler>(args.at(0), store);
+      }
+    );
+```
+
+## Testing ApiHandler
+
+- **Unit tests** live in `api_handler_test.cc`—run with
+  ```shell
+  ctest -R ApiHandlerTest
+  ```
+
+## Config Example
+
+location /api ApiHandler {
+  data_path /mnt/crud;
+}
+
+## Supported Requests
+
+POST /api/Entity → create, returns {"id":<int>}
+GET /api/Entity/<id> → read JSON blob
+PUT /api/Entity/<id> → upsert
+DELETE /api/Entity/<id> → delete
+GET /api/Entity → list all existing IDs
 
 ## CMakeLists.txt
 
@@ -260,4 +321,3 @@ target_link_libraries(example_handler_lib
 The config file should follow the API discussed in class, with the name of the new handler being the same as the value of its `kName` field.
 
 It should be noted that the only argument allowed inside the location blocks of our config files is `root [PATH];`. If additional argument types are needed, then the `config_parser` should be modified to support them in the same way as root.
-

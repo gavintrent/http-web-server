@@ -23,6 +23,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# give the server a moment to bind the socket
+sleep 0.1
+
 # Request a non-existent path
 curl -s -D "$RESPONSE_HEADERS" "http://localhost:$PORT/some/unknown/path" -o /dev/null
 

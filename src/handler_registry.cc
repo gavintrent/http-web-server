@@ -20,4 +20,3 @@ HandlerRegistry::createHandler(const std::string& name,
   if (it == factories.end()) return nullptr;
   return it->second(args);
 }
-

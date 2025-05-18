@@ -315,25 +315,15 @@ bool parseConfig(const char* config_file, int& port) {
                 return false;
             }
 
-            // Parse handler arguments from the child block
-            std::map<std::string, std::string> handler_args;
-            if (stmt->child_block_) {
-                for (const auto& arg_stmt : stmt->child_block_->statements_) {
-                    if (arg_stmt->tokens_.size() >= 2) {
-                        handler_args[arg_stmt->tokens_[0]] = arg_stmt->tokens_[1];
-                    }
-                }
-            }
+            // build args = { path, val1, val2, … } in declaration order
             std::vector<std::string> args;
             args.push_back(path);
-
-            // Get root dir from child { ... } block
-            std::string root_dir = "";
-            for (const auto& arg_stmt : stmt->child_block_->statements_) {
-              if (arg_stmt->tokens_.size() >= 2 && arg_stmt->tokens_[0] == "root") {
-                root_dir = arg_stmt->tokens_[1];
-                args.push_back(root_dir);
-              }
+            if (stmt->child_block_) {
+                for (auto const& arg_stmt : stmt->child_block_->statements_) {
+                    if (arg_stmt->tokens_.size() >= 2) {
+                        args.push_back(arg_stmt->tokens_[1]);
+                    }
+                }
             }
 
             //Add new route to dispatcher

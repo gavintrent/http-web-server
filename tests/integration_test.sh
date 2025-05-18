@@ -31,6 +31,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# give the server a moment to bind the socket
+sleep 0.1
+
 # Send GET request, capturing headers and body separately
 curl -s -D "$RESPONSE_HEADERS" "http://localhost:$PORT/echo" -o "$RESPONSE_BODY"
 

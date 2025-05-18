@@ -18,4 +18,4 @@ RUN apt-get update && apt-get install -y \
     netcat-openbsd \
     lcov \
     gcovr \
-    
+    nlohmann-json3-dev

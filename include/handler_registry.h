@@ -5,6 +5,8 @@
 #include <memory>
 #include <unordered_map>
 #include "request_handler.h"
+#include "api_handler.h"
+#include "disk_file_store.h"
 
 class HandlerRegistry {
 public:

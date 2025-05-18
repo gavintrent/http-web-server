@@ -31,6 +31,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# give the server a moment to bind the socket
+sleep 0.1
+
 # Send GET request
 curl -s -i -S "http://localhost:$PORT/static1/test.html" -o "$RESPONSE_FILE"
 
