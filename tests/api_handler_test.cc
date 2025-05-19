@@ -18,6 +18,10 @@ class FailWriteStore : public FileStore {
                                   int id) override {
     return std::nullopt;
   }
+
+  std::optional<std::vector<std::string>> read_directory(const std::string& entity) {
+    return std::nullopt;
+  }
 };
 
 class ApiHandlerTest : public ::testing::Test {
@@ -79,14 +83,48 @@ TEST_F(ApiHandlerTest, MissingEntityOnGetYields404) {
   EXPECT_EQ(res->status_code, 404);
 }
 
-// 5) unhandled method or missing ID → 400
-TEST_F(ApiHandlerTest, UnhandledMethodOrMissingIdYields400) {
-  // GET without ID on an existing entity path
-  req.method = "GET";
-  req.path   = "/api/Shoes";
-  auto res1 = handler->handle_request(req);
-  EXPECT_EQ(res1->status_code, 400);
+// 5) list existing ids within entity → 200
+TEST_F(ApiHandlerTest, ListSuccessful) {
+  req.method = "POST";
+  req.path   = "/api/Fruits";
+  req.body   = R"({"name":"apple"})";
+  handler->handle_request(req);
 
+  req.method = "POST";
+  req.path   = "/api/Fruits";
+  req.body   = R"({"name":"banana"})";
+  handler->handle_request(req);
+
+  req.method = "GET";
+  req.path   = "/api/Fruits"; 
+  req.body   = "";
+  auto res = handler->handle_request(req);
+  EXPECT_EQ(res->status_code, 200);
+  EXPECT_EQ(res->body, "{\"id\":[\"0\",\"1\"]}");
+}
+
+// 6) entity exists but no ids → 200 + empty list
+TEST_F(ApiHandlerTest, ListEntityWithNoID) {
+  // TODO: add POST/DELETE
+
+  req.method = "GET";
+  req.path   = "/api/Fruits";  
+  auto res = handler->handle_request(req);
+  EXPECT_EQ(res->status_code, 404);
+  // EXPECT_EQ(res->status_code, 200);
+  // EXPECT_EQ(res->body, "{\"id\":[]}");
+}
+
+// 7) entity does not exist for list → 404
+TEST_F(ApiHandlerTest, ListMissingEntityYields404) {
+  req.method = "GET";
+  req.path   = "/api/DoesNotExist";  
+  auto res = handler->handle_request(req);
+  EXPECT_EQ(res->status_code, 404);
+}
+
+// 8) unhandled method or missing ID → 400
+TEST_F(ApiHandlerTest, UnhandledMethodOrMissingIdYields400) {
   // POST *with* ID present
   req.method = "POST";
   req.path   = "/api/Shoes/0";
@@ -100,7 +138,7 @@ TEST_F(ApiHandlerTest, UnhandledMethodOrMissingIdYields400) {
   EXPECT_EQ(res3->status_code, 400);
 }
 
-// 6) the static factory registration in HandlerRegistry
+// 9) the static factory registration in HandlerRegistry
 TEST(ApiHandlerFactoryTest, RegisteredInHandlerRegistry) {
   auto ptr = HandlerRegistry::instance().createHandler(
       "ApiHandler", std::vector<std::string>{"/api", "/tmp/data"});

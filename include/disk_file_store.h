@@ -1,6 +1,7 @@
 #pragma once
 #include "file_store.h"
 #include <string>
+#include <vector>
 
 // A FileStore that uses the real filesystem under `root_dir`.
 class DiskFileStore : public FileStore {
@@ -11,7 +12,9 @@ public:
              const std::string& data) override;
   std::optional<std::string> read(const std::string& entity,
                                   int id) override;
-
+  
+  std::optional<std::vector<std::string>> read_directory(const std::string& entity) override;
+  
 private:
   std::string root_;
 };

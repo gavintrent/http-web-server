@@ -2,6 +2,7 @@
 #include "disk_file_store.h"
 #include "api_handler.h"
 #include <nlohmann/json.hpp>
+#include <vector>
 
 bool ApiHandler::parse_path(const std::string& p,
                             std::string& entity,
@@ -55,6 +56,23 @@ std::unique_ptr<HttpResponse> ApiHandler::handle_request(const HttpRequest& req)
     res->headers["Content-Type"] = "application/json";
     res->headers["Content-Length"] = std::to_string(res->body.size());
     return res;
+  }
+
+  // ----- LIST (GET /api/Entity) -----
+  if (req.method == "GET" && !id) {
+      auto filenames = store_->read_directory(entity);
+      if (!filenames) {
+          res->status_code = 404;
+          return res;
+      }
+      nlohmann::json j; 
+      j["id"] = *filenames;
+      res->body = j.dump();
+      res->status_code = 200;
+      res->headers["Content-Type"] = "application/json";
+      res->headers["Content-Length"] = std::to_string(res->body.size());
+
+      return res;
   }
 
   // Unhandled method or missing ID

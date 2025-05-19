@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <optional>
+#include <vector>
 
 // Abstract filesystem store for JSON blobs, keyed by entity name + numeric ID.
 struct FileStore {
@@ -18,4 +19,6 @@ struct FileStore {
   // Read the blob for entity/id, or nullopt if missing.
   virtual std::optional<std::string> read(const std::string& entity,
                                           int id) = 0;
+
+  virtual std::optional<std::vector<std::string>> read_directory(const std::string& entity) = 0;
 };

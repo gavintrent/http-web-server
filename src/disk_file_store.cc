@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -46,4 +47,15 @@ std::optional<std::string> DiskFileStore::read(const std::string& entity,
   std::ostringstream ss;
   ss << in.rdbuf();
   return ss.str();
+}
+
+std::optional<std::vector<std::string>> DiskFileStore::read_directory(const std::string& entity) {
+  fs::path dir = fs::path(root_) / entity;
+  if (!fs::exists(dir))
+      return std::nullopt;
+  
+  std::vector<std::string> filenames;
+  for (auto const& ent : fs::directory_iterator(dir))
+      filenames.push_back(ent.path().filename().string());
+  return filenames;
 }

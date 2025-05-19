@@ -20,3 +20,14 @@ std::optional<std::string> FakeFileStore::read(const std::string& entity,
   if (obj_it == ent_it->second.end()) return std::nullopt;
   return obj_it->second;
 }
+
+std::optional<std::vector<std::string>> FakeFileStore::read_directory(const std::string& entity) {
+  
+  std::vector<std::string> filenames;
+  auto ent_it = store_.find(entity);
+  if (ent_it == store_.end()) return std::nullopt;
+  for (const auto& obj_it : ent_it->second)
+    filenames.push_back(std::to_string(obj_it.first));
+
+  return filenames;
+}
