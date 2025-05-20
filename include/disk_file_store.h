@@ -13,7 +13,7 @@ public:
   std::optional<std::string> read(const std::string& entity,
                                   int id) override;
   
-  std::optional<std::vector<std::string>> read_directory(const std::string& entity) override;
+  std::optional<std::vector<int>> read_directory(const std::string& entity) override;
   
 private:
   std::string root_;

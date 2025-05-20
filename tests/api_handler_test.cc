@@ -19,7 +19,7 @@ class FailWriteStore : public FileStore {
     return std::nullopt;
   }
 
-  std::optional<std::vector<std::string>> read_directory(const std::string& entity) {
+  std::optional<std::vector<int>> read_directory(const std::string& entity) {
     return std::nullopt;
   }
 };
@@ -100,7 +100,7 @@ TEST_F(ApiHandlerTest, ListSuccessful) {
   req.body   = "";
   auto res = handler->handle_request(req);
   EXPECT_EQ(res->status_code, 200);
-  EXPECT_EQ(res->body, "{\"id\":[\"0\",\"1\"]}");
+  EXPECT_EQ(res->body, "{\"id\":[0,1]}");
 }
 
 // 6) entity exists but no ids → 200 + empty list

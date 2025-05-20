@@ -15,7 +15,7 @@ public:
              const std::string& data) override;
   std::optional<std::string> read(const std::string& entity,
                                   int id) override;
-  std::optional<std::vector<std::string>> read_directory(const std::string& entity) override;
+  std::optional<std::vector<int>> read_directory(const std::string& entity) override;
 private:
   std::map<std::string, int> next_id_;
   std::map<std::string, std::map<int, std::string>> store_;

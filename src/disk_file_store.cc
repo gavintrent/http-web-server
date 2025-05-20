@@ -11,7 +11,9 @@ DiskFileStore::DiskFileStore(std::string root_dir)
 {}
 
 int DiskFileStore::next_id(const std::string& entity) {
-  fs::path dir = fs::path(root_) / entity;
+  // uses absolute path to find data_path directory
+  fs::path dir = fs::path("/usr/srsc/projects/name-not-found-404") / fs::path(root_) / entity;
+
   if (!fs::exists(dir)) return 0;
   int max_id = -1;
   for (auto const& ent : fs::directory_iterator(dir)) {
@@ -27,7 +29,9 @@ int DiskFileStore::next_id(const std::string& entity) {
 bool DiskFileStore::write(const std::string& entity,
                           int id,
                           const std::string& data) {
-  fs::path dir = fs::path(root_) / entity;
+  // uses absolute path to find data_path directory
+  fs::path dir = fs::path("/usr/src/projects/name-not-found-404") / fs::path(root_) / entity;
+
   std::error_code ec;
   fs::create_directories(dir, ec);
   if (ec) return false;
@@ -40,7 +44,8 @@ bool DiskFileStore::write(const std::string& entity,
 
 std::optional<std::string> DiskFileStore::read(const std::string& entity,
                                                int id) {
-  fs::path file = fs::path(root_) / entity / std::to_string(id);
+  // uses absolute path to find data_path directory
+  fs::path file = fs::path("/usr/src/projects/name-not-found-404") / fs::path(root_) / entity / std::to_string(id);
   if (!fs::exists(file)) return std::nullopt;
   std::ifstream in(file, std::ios::binary);
   if (!in) return std::nullopt;
@@ -49,13 +54,14 @@ std::optional<std::string> DiskFileStore::read(const std::string& entity,
   return ss.str();
 }
 
-std::optional<std::vector<std::string>> DiskFileStore::read_directory(const std::string& entity) {
-  fs::path dir = fs::path(root_) / entity;
+std::optional<std::vector<int>> DiskFileStore::read_directory(const std::string& entity) {
+  // uses absolute path to find data_path directory
+  fs::path dir = fs::path("/usr/src/projects/name-not-found-404") / fs::path(root_) / entity;
   if (!fs::exists(dir))
       return std::nullopt;
   
-  std::vector<std::string> filenames;
+  std::vector<int> filenames;
   for (auto const& ent : fs::directory_iterator(dir))
-      filenames.push_back(ent.path().filename().string());
+      filenames.push_back(std::stoi(ent.path().filename().string()));
   return filenames;
 }

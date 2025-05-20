@@ -20,5 +20,5 @@ struct FileStore {
   virtual std::optional<std::string> read(const std::string& entity,
                                           int id) = 0;
 
-  virtual std::optional<std::vector<std::string>> read_directory(const std::string& entity) = 0;
+  virtual std::optional<std::vector<int>> read_directory(const std::string& entity) = 0;
 };
