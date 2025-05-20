@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 #include <regex>
 #include <vector>
+#include <mutex>
 
 bool ApiHandler::parse_path(const std::string& p,
                            std::string& entity,
@@ -30,6 +31,7 @@ std::unique_ptr<HttpResponse> ApiHandler::handle_request(const HttpRequest& req)
 
   // ----- CREATE (POST /api/Entity) -----
   if (req.method == "POST" && !id) {
+    std::lock_guard<std::mutex> lock(store_mutex_);
     int new_id = store_->next_id(entity);
     if (!store_->write(entity, new_id, req.body)) {
       res->status_code = 500;
@@ -47,6 +49,7 @@ std::unique_ptr<HttpResponse> ApiHandler::handle_request(const HttpRequest& req)
 
   // ----- RETRIEVE (GET /api/Entity/{id}) -----
   if (req.method == "GET" && id) {
+    std::lock_guard<std::mutex> lock(store_mutex_);
     auto data = store_->read(entity, *id);
     if (!data) {
       res->status_code = 404;
@@ -61,6 +64,7 @@ std::unique_ptr<HttpResponse> ApiHandler::handle_request(const HttpRequest& req)
 
   // ----- LIST (GET /api/Entity) -----
   if (req.method == "GET" && !id) {
+    std::lock_guard<std::mutex> lock(store_mutex_);
     auto filenames = store_->read_directory(entity);
     if (!filenames) {
       res->status_code = 404;
@@ -92,6 +96,7 @@ std::unique_ptr<HttpResponse> ApiHandler::handle_request(const HttpRequest& req)
       return res;
     }
 
+    std::lock_guard<std::mutex> lock(store_mutex_);
     // Write data to storage
     if (!store_->write(entity, *id, req.body)) {
       res->status_code = 500; // Internal Server Error
@@ -116,6 +121,7 @@ std::unique_ptr<HttpResponse> ApiHandler::handle_request(const HttpRequest& req)
 
   // ----- DELETE (DELETE /api/Entity/{id}) -----
   if (req.method == "DELETE" && id) {
+    std::lock_guard<std::mutex> lock(store_mutex_);
     // First check if the entity exists
     auto data = store_->read(entity, *id);
     if (!data) {
