@@ -11,7 +11,9 @@ public:
   bool write(const std::string& entity, int id,
              const std::string& data) override;
   std::optional<std::string> read(const std::string& entity,
-                                  int id) override;
+                                 int id) override;
+                                 
+  bool remove(const std::string& entity, int id) override;
   
   std::optional<std::vector<int>> read_directory(const std::string& entity) override;
   

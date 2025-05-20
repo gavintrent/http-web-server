@@ -3,6 +3,9 @@
 #include "fake_file_store.h"
 #include "handler_registry.h"
 #include <memory>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 // A little helper store that always fails writes
 class FailWriteStore : public FileStore {
@@ -14,13 +17,19 @@ class FailWriteStore : public FileStore {
              const std::string& data) override {
     return false;  // always fail
   }
-  std::optional<std::string> read(const std::string& entity,
-                                  int id) override {
+  std::optional<std::vector<std::string>> read_directory(const std::string& entity) override {
     return std::nullopt;
   }
+  bool remove(const std::string& entity, int id) override {
+    return false;  // always fail
+  }
+};
 
-  std::optional<std::vector<int>> read_directory(const std::string& entity) {
-    return std::nullopt;
+// Extension of FailWriteStore that succeeds on read for testing delete functionality
+class MockReadSuccessStore : public FailWriteStore {
+ public:
+  std::optional<std::string> read(const std::string& entity, int id) override {
+    return R"({"test":"data"})";
   }
 };
 
@@ -146,4 +155,122 @@ TEST(ApiHandlerFactoryTest, RegisteredInHandlerRegistry) {
   // Should actually produce an ApiHandler
   auto* api = dynamic_cast<ApiHandler*>(ptr.get());
   EXPECT_NE(api, nullptr);
+}
+
+// 10) Update existing entity succeeds
+TEST_F(ApiHandlerTest, UpdateEntitySucceeds) {
+  // First create an entity
+  json data = {{"name", "test shoe"}, {"size", 10}};
+  int id = 0;
+  store->write("Shoes", id, data.dump());
+  
+  // Build an update request
+  req.method = "PUT";
+  req.path = "/api/Shoes/0";
+  json updated_data = {{"name", "updated shoe"}, {"size", 11}};
+  req.body = updated_data.dump();
+  
+  // Send update request
+  auto res = handler->handle_request(req);
+  
+  // Verify response
+  EXPECT_EQ(res->status_code, 200);
+  
+  // Parse the body to verify it contains success message
+  json response = json::parse(res->body);
+  EXPECT_TRUE(response["success"]);
+  EXPECT_EQ(response["id"], id);
+  
+  // Verify data was actually updated in the store
+  auto stored_data = store->read("Shoes", id);
+  ASSERT_TRUE(stored_data.has_value());
+  json parsed_stored = json::parse(*stored_data);
+  EXPECT_EQ(parsed_stored["name"], "updated shoe");
+  EXPECT_EQ(parsed_stored["size"], 11);
+}
+
+// 11) Update non-existent entity creates it
+TEST_F(ApiHandlerTest, UpdateNonExistentEntityCreatesIt) {
+  // Build an update request for a non-existent entity
+  req.method = "PUT";
+  req.path = "/api/Books/42";
+  json data = {{"title", "The Hitchhiker's Guide to the Galaxy"}, {"author", "Douglas Adams"}};
+  req.body = data.dump();
+  
+  // Send update request
+  auto res = handler->handle_request(req);
+  
+  // Verify response
+  EXPECT_EQ(res->status_code, 200);
+  
+  // Verify data was created in the store
+  auto stored_data = store->read("Books", 42);
+  ASSERT_TRUE(stored_data.has_value());
+  json parsed_stored = json::parse(*stored_data);
+  EXPECT_EQ(parsed_stored["title"], "The Hitchhiker's Guide to the Galaxy");
+}
+
+// 12) Update with invalid JSON fails
+TEST_F(ApiHandlerTest, UpdateWithInvalidJsonFails) {
+  // Build an update request with invalid JSON
+  req.method = "PUT";
+  req.path = "/api/Shoes/1";
+  req.body = "{invalid json";
+  
+  // Send update request
+  auto res = handler->handle_request(req);
+  
+  // Verify response indicates error
+  EXPECT_EQ(res->status_code, 400);
+}
+
+// 13) Delete existing entity succeeds
+TEST_F(ApiHandlerTest, DeleteExistingEntitySucceeds) {
+  // First create an entity
+  json data = {{"name", "test shoe"}, {"size", 10}};
+  store->write("Shoes", 1, data.dump());
+  
+  // Build a delete request
+  req.method = "DELETE";
+  req.path = "/api/Shoes/1";
+  
+  // Send delete request
+  auto res = handler->handle_request(req);
+  
+  // Verify response
+  EXPECT_EQ(res->status_code, 200);
+  
+  // Parse the body to verify it contains success message
+  json response = json::parse(res->body);
+  EXPECT_TRUE(response["success"]);
+  
+  // Verify entity was actually deleted
+  auto stored_data = store->read("Shoes", 1);
+  EXPECT_FALSE(stored_data.has_value());
+}
+
+// 14) Delete non-existent entity fails
+TEST_F(ApiHandlerTest, DeleteNonExistentEntityFails) {
+  // Build a delete request for a non-existent entity
+  req.method = "DELETE";
+  req.path = "/api/Shoes/9999";
+  
+  // Send delete request
+  auto res = handler->handle_request(req);
+  
+  // Verify response indicates error
+  EXPECT_EQ(res->status_code, 404);
+}
+
+// 15) Write failure on delete returns 500
+TEST(ApiHandlerStandaloneTest, RemoveFailureYields500) {
+  auto mockStore = std::make_shared<MockReadSuccessStore>();
+  ApiHandler handler("/api", mockStore);
+  
+  HttpRequest r;
+  r.method = "DELETE";
+  r.path = "/api/Books/1";
+  
+  auto res = handler.handle_request(r);
+  EXPECT_EQ(res->status_code, 500);
 }
