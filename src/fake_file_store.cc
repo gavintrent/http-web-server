@@ -21,12 +21,12 @@ std::optional<std::string> FakeFileStore::read(const std::string& entity, int id
     return obj_it->second;
 }
 
-std::optional<std::vector<std::string>> FakeFileStore::read_directory(const std::string& entity) {
-    std::vector<std::string> filenames;
+std::optional<std::vector<int>> FakeFileStore::read_directory(const std::string& entity) {
+    std::vector<int> filenames;
     auto ent_it = store_.find(entity);
     if (ent_it == store_.end()) return std::nullopt;
     for (const auto& obj_it : ent_it->second)
-        filenames.push_back(std::to_string(obj_it.first));
+        filenames.push_back(obj_it.first);
     return filenames;
 }
 
@@ -39,7 +39,7 @@ bool FakeFileStore::remove(const std::string& entity, int id) {
     // Check if the ID exists within the entity
     auto& entity_map = ent_it->second;
     auto obj_it = entity_map.find(id);
-    if (obj_it == entity_map->second.end()) {
+    if (obj_it == ent_it->second.end()) {
         return false;
     }
     // Remove the entity and return true to indicate success

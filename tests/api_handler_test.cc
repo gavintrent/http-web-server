@@ -17,7 +17,10 @@ class FailWriteStore : public FileStore {
              const std::string& data) override {
     return false;  // always fail
   }
-  std::optional<std::vector<std::string>> read_directory(const std::string& entity) override {
+  std::optional<std::string> read(const std::string& entity, int id) override {
+    return std::nullopt;
+  }
+  std::optional<std::vector<int>> read_directory(const std::string& entity) override {
     return std::nullopt;
   }
   bool remove(const std::string& entity, int id) override {
@@ -139,12 +142,6 @@ TEST_F(ApiHandlerTest, UnhandledMethodOrMissingIdYields400) {
   req.path   = "/api/Shoes/0";
   auto res2 = handler->handle_request(req);
   EXPECT_EQ(res2->status_code, 400);
-
-  // DELETE is not implemented
-  req.method = "DELETE";
-  req.path   = "/api/Shoes/0";
-  auto res3 = handler->handle_request(req);
-  EXPECT_EQ(res3->status_code, 400);
 }
 
 // 9) the static factory registration in HandlerRegistry

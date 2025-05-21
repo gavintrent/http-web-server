@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 namespace fs = std::filesystem;
 
@@ -10,8 +11,7 @@ DiskFileStore::DiskFileStore(std::string root_dir)
     : root_(std::move(root_dir)) {}
 
 int DiskFileStore::next_id(const std::string& entity) {
-    // uses absolute path to find data_path directory
-    fs::path dir = fs::path("/usr/srsc/projects/name-not-found-404") / fs::path(root_) / entity;
+    fs::path dir = fs::path(root_) / entity;
     if (!fs::exists(dir)) return 0;
 
     int max_id = -1;
@@ -26,9 +26,8 @@ int DiskFileStore::next_id(const std::string& entity) {
 }
 
 bool DiskFileStore::write(const std::string& entity, int id, const std::string& data) {
-    // uses absolute path to find data_path directory
-    fs::path dir = fs::path("/usr/src/projects/name-not-found-404") / fs::path(root_) / entity;
-    fs::error_code ec;
+    fs::path dir =  fs::path(root_) / entity;
+    std::error_code ec;
     fs::create_directories(dir, ec);
     if (ec) return false;
     fs::path file = dir / std::to_string(id);
@@ -39,8 +38,7 @@ bool DiskFileStore::write(const std::string& entity, int id, const std::string& 
 }
 
 std::optional<std::string> DiskFileStore::read(const std::string& entity, int id) {
-    // uses absolute path to find data_path directory
-    fs::path file = fs::path("/usr/src/projects/name-not-found-404") / fs::path(root_) / entity / std::to_string(id);
+    fs::path file =  fs::path(root_) / entity / std::to_string(id);
     if (!fs::exists(file)) return std::nullopt;
     std::ifstream in(file, std::ios::binary);
     if (!in) return std::nullopt;
@@ -50,8 +48,7 @@ std::optional<std::string> DiskFileStore::read(const std::string& entity, int id
 }
 
 std::optional<std::vector<int>> DiskFileStore::read_directory(const std::string& entity) {
-    // uses absolute path to find data_path directory
-    fs::path dir = fs::path("/usr/src/projects/name-not-found-404") / fs::path(root_) / entity;
+    fs::path dir = fs::path(root_) / entity;
     if (!fs::exists(dir))
         return std::nullopt;
 
@@ -60,6 +57,7 @@ std::optional<std::vector<int>> DiskFileStore::read_directory(const std::string&
         try {
             filenames.push_back(std::stoi(ent.path().filename().string()));
         } catch (...) { }
+    std::sort(filenames.begin(), filenames.end());
     return filenames;
 }
 

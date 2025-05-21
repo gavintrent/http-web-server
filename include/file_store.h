@@ -25,5 +25,5 @@ struct FileStore {
     virtual bool remove(const std::string& entity, int id) = 0;
 
     // Read the directory for entity, returning list of IDs or names.
-    virtual std::optional<std::vector<std::string>> read_directory(const std::string& entity) = 0;
+    virtual std::optional<std::vector<int>> read_directory(const std::string& entity) = 0;
 };

@@ -203,3 +203,6 @@ add_test(NAME StaticHandlerIntegrationTest
 
 add_test(NAME NotFoundHandlerIntegrationTest
          COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/not_found_integration_test.sh)
+
+add_test(NAME APIHandlerIntegrationTest
+         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/api_integration_test.sh)
