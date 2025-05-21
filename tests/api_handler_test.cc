@@ -117,14 +117,10 @@ TEST_F(ApiHandlerTest, ListSuccessful) {
 
 // 6) entity exists but no ids → 200 + empty list
 TEST_F(ApiHandlerTest, ListEntityWithNoID) {
-  // TODO: add POST/DELETE
-
   req.method = "GET";
   req.path   = "/api/Fruits";  
   auto res = handler->handle_request(req);
   EXPECT_EQ(res->status_code, 404);
-  // EXPECT_EQ(res->status_code, 200);
-  // EXPECT_EQ(res->body, "{\"id\":[]}");
 }
 
 // 7) entity does not exist for list → 404
