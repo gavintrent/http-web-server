@@ -40,24 +40,28 @@ void session::handle_read(const boost::system::error_code& ec,
     return;
   }
 
+  boost::system::error_code parse_ec;
+  auto req = parser_.parse(data_, bytes_transferred, parse_ec);
+
   try {
     auto client_ip = socket_.remote_endpoint().address().to_string();
     auto client_port = socket_.remote_endpoint().port();
     BOOST_LOG_TRIVIAL(info) << "Received request from " << client_ip << ":" << client_port;
+    req.client_ip = client_ip;
   } catch (std::exception& e) {
     BOOST_LOG_TRIVIAL(warning) << "Could not retrieve client address: " << e.what();
+    req.client_ip = "unknown";
   }
-
-  boost::system::error_code parse_ec;
-  auto req = parser_.parse(data_, bytes_transferred, parse_ec);
 
   std::unique_ptr<HttpResponse> app_res;
   if (parse_ec) {
     BOOST_LOG_TRIVIAL(error) << "Failed to parse HTTP request: " << parse_ec.message();
+    app_res = std::make_unique<HttpResponse>();
     app_res->status_code = 400;
+    app_res->headers["Content-Type"] = "text/plain";
+    app_res->body = "Bad Request";
   } else {
     BOOST_LOG_TRIVIAL(debug) << "Parsed request, routing...";
-
     app_res = Dispatcher::match(req.path)->handle_request(req);
   }
 
