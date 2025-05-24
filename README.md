@@ -19,7 +19,7 @@
 
   Manages server logging.
 
-* echo_handler.cc, static_handler.cc, not_found_handler.cc
+* echo_handler.cc, static_handler.cc, not_found_handler.cc, health_handler.cc
 
   Request handlers. Each handler inherits from the `request_handler.h` header file. They are created per request by the `dispatcher`.
 
@@ -54,6 +54,7 @@ struct HttpRequest {
   std::map<std::string, std::string> headers; // map header names to their values
   std::string body; //HTTP body
   std::string raw; //raw string containing the full HTTP request
+  std::string client_ip; //IP address of the client for monitoring
 };
 ```
 ```cpp
@@ -321,3 +322,10 @@ target_link_libraries(example_handler_lib
 The config file should follow the API discussed in class, with the name of the new handler being the same as the value of its `kName` field.
 
 It should be noted that the only argument allowed inside the location blocks of our config files is `root [PATH];`. If additional argument types are needed, then the `config_parser` should be modified to support them in the same way as root.
+
+## Monitoring
+
+The health handler supports monitoring through:
+- Health check endpoint for server status
+- Malformed request detection for security monitoring
+- Machine-parsable logs for request analysis
