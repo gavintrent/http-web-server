@@ -8,12 +8,15 @@
 #include <sstream>
 #include "echo_handler.h"
 #include "handler_registry.h"
+#include <thread>
+#include <boost/log/trivial.hpp>
 
 const std::string EchoHandler::kName = "EchoHandler";
 
 EchoHandler::EchoHandler(const std::string& path) : path_(path) {}
 
 std::unique_ptr<HttpResponse> EchoHandler::handle_request(const HttpRequest& req) {
+  BOOST_LOG_TRIVIAL(info) << "Handling /echo in thread " << std::this_thread::get_id();
   auto res = std::make_unique<HttpResponse>();
   if (req.method == "GET") {
     return doEcho(req);

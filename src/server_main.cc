@@ -43,7 +43,14 @@ int main(int argc, char* argv[])
     server srv(io_service, port);
     BOOST_LOG_TRIVIAL(info) << "Server listening on port " << port;
 
+    std::vector<std::thread> workers;
+    for (int i = 0; i < 4; ++i) {
+    workers.emplace_back([&io_service]() {
     io_service.run();
+    });
+    }
+
+    for (auto& t : workers) t.join();
   }
   catch (std::exception& e)
   {

@@ -63,6 +63,7 @@ add_library (not_found_handler_lib OBJECT src/not_found_handler.cc)
 add_library(static_handler_lib OBJECT src/static_handler.cc)
 add_library(api_handler_lib OBJECT src/api_handler.cc)
 add_library(health_handler_lib OBJECT src/health_handler.cc)
+add_library(sleep_handler_lib OBJECT src/sleep_handler.cc)
 
 #link dispatcher
 target_link_libraries(config_parser_lib dispatcher_lib)
@@ -70,10 +71,19 @@ target_link_libraries(session_lib dispatcher_lib)
 
 target_link_libraries(echo_handler_lib
   PUBLIC handler_registry
+  Boost::log
+  Boost::log_setup
+)
+
+target_link_libraries(sleep_handler_lib
+  PUBLIC handler_registry
+  Boost::log
+  Boost::log_setup
 )
 target_link_libraries(static_handler_lib
   PUBLIC handler_registry
 )
+
 target_link_libraries(not_found_handler_lib
   PUBLIC handler_registry
 )
@@ -95,7 +105,7 @@ session_lib config_parser_lib echo_handler_lib not_found_handler_lib
 static_handler_lib request_parser_lib Boost::log_setup Boost::log 
 Boost::system Boost::regex api_handler_lib disk_file_store_lib 
 fake_file_store_lib nlohmann_json::nlohmann_json 
-  health_handler_lib)
+  health_handler_lib sleep_handler_lib)
 
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib 
@@ -112,7 +122,7 @@ add_executable(not_found_handler_test tests/not_found_handler_test.cc)
 target_link_libraries(not_found_handler_test not_found_handler_lib gtest_main gmock_main)
 
 add_executable(echo_handler_test tests/echo_handler_test.cc)
-target_link_libraries(echo_handler_test echo_handler_lib request_parser_lib gtest_main gmock_main)
+target_link_libraries(echo_handler_test echo_handler_lib request_parser_lib gtest_main gmock_main Boost::log Boost::log_setup)
 
 add_executable(static_handler_test tests/static_handler_test.cc)
 target_link_libraries(static_handler_test static_handler_lib request_parser_lib gtest_main)
@@ -222,3 +232,6 @@ add_test(NAME APIHandlerIntegrationTest
 
 add_test(NAME HealthHandlerIntegrationTest
          COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/health_handler_integration_test.sh)
+
+add_test(NAME ConcurrentIntegrationTest
+         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/concurrent_integration_test.sh)

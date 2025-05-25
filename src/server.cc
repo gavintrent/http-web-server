@@ -7,6 +7,11 @@ using boost::asio::ip::tcp;
 
 #include "server.h"
 #include "session.h"
+#include <thread>
+
+void server::join_pool() {
+  thread_pool_.join();
+}
 
 server::server(boost::asio::io_service& io_service, short port)
   : io_service_(io_service),
@@ -28,7 +33,9 @@ void server::handle_accept(session* new_session,
 {
   if (!error)
   {
-    new_session->start();
+    boost::asio::post(thread_pool_, [new_session]() {
+      new_session->start();
+    });
   }
   else
   {

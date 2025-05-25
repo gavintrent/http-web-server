@@ -5,6 +5,7 @@
 #include <iostream>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
+#include <boost/asio/thread_pool.hpp>
 
 using boost::asio::ip::tcp;
 
@@ -17,10 +18,12 @@ public:
 
     void start_accept();
     void handle_accept(session* new_session, const boost::system::error_code& error);
+    void join_pool();
 
 private:
   boost::asio::io_service& io_service_;
   tcp::acceptor acceptor_;
+  boost::asio::thread_pool thread_pool_{4};
   friend class ServerTest;
 };
 #endif
