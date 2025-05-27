@@ -31,13 +31,6 @@ HealthHandler::handle_request(const HttpRequest& request) {
         response->body = "Not Found";
     }
 
-    BOOST_LOG_TRIVIAL(info)
-      << "[ResponseMetrics]"
-      << " code="   << response->status_code
-      << " path="   << request.path
-      << " client=" << request.client_ip
-      << " handler="<< HealthHandler::kName;
-
     return response;
 }
 

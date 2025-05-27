@@ -6,6 +6,8 @@
 #include <vector>
 #include <mutex>
 
+const std::string ApiHandler::kName = "ApiHandler";
+
 bool ApiHandler::parse_path(const std::string& p,
                            std::string& entity,
                            std::optional<int>& id) {
@@ -161,7 +163,7 @@ std::unique_ptr<HttpResponse> ApiHandler::handle_request(const HttpRequest& req)
 }
 
 static bool apiRegistered = HandlerRegistry::instance()
-  .registerHandler("ApiHandler",
+  .registerHandler(ApiHandler::kName,
     [](const std::vector<std::string>& args) {
       // args[0] = mount, args[1] = data_path
       auto store = std::make_shared<DiskFileStore>(args.at(1));

@@ -17,6 +17,7 @@ public:
   std::unique_ptr<HttpResponse> handle_request(const HttpRequest& req) override;
 
   static const std::string kName;
+  std::string get_kName() { return kName; };
 
 protected:
   std::string path_;

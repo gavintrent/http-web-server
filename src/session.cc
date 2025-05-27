@@ -54,6 +54,7 @@ void session::handle_read(const boost::system::error_code& ec,
   }
 
   std::unique_ptr<HttpResponse> app_res;
+  std::string handler_name = "None";
   if (parse_ec) {
     BOOST_LOG_TRIVIAL(error) << "Failed to parse HTTP request: " << parse_ec.message();
     app_res = std::make_unique<HttpResponse>();
@@ -62,7 +63,9 @@ void session::handle_read(const boost::system::error_code& ec,
     app_res->body = "Bad Request";
   } else {
     BOOST_LOG_TRIVIAL(debug) << "Parsed request, routing...";
-    app_res = Dispatcher::match(req.path)->handle_request(req);
+    auto handler = Dispatcher::match(req.path);
+    handler_name = handler->get_kName();
+    app_res = handler->handle_request(req);
   }
 
   // Build Beast response
@@ -72,6 +75,13 @@ void session::handle_read(const boost::system::error_code& ec,
   response.prepare_payload();
 
   BOOST_LOG_TRIVIAL(debug) << "Sending response with status code: " << app_res->status_code;
+
+  BOOST_LOG_TRIVIAL(info)
+      << "[ResponseMetrics]"
+      << " code="   << app_res->status_code
+      << " path="   << req.path
+      << " client=" << req.client_ip
+      << " handler="<< handler_name;
 
   http::async_write(socket_, response,
     boost::bind(&session::handle_write, this,

@@ -11,6 +11,7 @@ class RequestHandler {
 public:
   virtual ~RequestHandler() = default;
   virtual std::unique_ptr<HttpResponse> handle_request(const HttpRequest& req) = 0;
+  virtual std::string get_kName() = 0;
 };
 
 using RequestHandlerFactory = std::function<RequestHandler*(

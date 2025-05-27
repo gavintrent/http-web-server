@@ -40,12 +40,6 @@ TEST_F(HealthHandlerTest, Returns200AndBodyOK) {
   EXPECT_EQ(resp->status_code, 200);
   EXPECT_EQ(resp->headers["Content-Type"], "text/plain");
   EXPECT_EQ(resp->body, "OK");
-
-  EXPECT_TRUE(log_contains("[ResponseMetrics]"));
-  EXPECT_TRUE(log_contains("code=200"));
-  EXPECT_TRUE(log_contains("path=/health"));
-  EXPECT_TRUE(log_contains("client=127.0.0.1"));
-  EXPECT_TRUE(log_contains("handler=HealthHandler"));
 }
 
 // test that the health handler returns a 404 Not Found response with the body "Not Found"
@@ -59,12 +53,6 @@ TEST_F(HealthHandlerTest, Returns404AndBodyNotFound) {
   auto resp = h_.handle_request(req);
   EXPECT_EQ(resp->status_code, 404);
   EXPECT_EQ(resp->body, "Not Found");
-
-  EXPECT_TRUE(log_contains("[ResponseMetrics]"));
-  EXPECT_TRUE(log_contains("code=404"));
-  EXPECT_TRUE(log_contains("path=/health"));
-  EXPECT_TRUE(log_contains("client=127.0.0.1"));
-  EXPECT_TRUE(log_contains("handler=HealthHandler"));
 }
 
 // test malformed request - empty method
@@ -77,12 +65,6 @@ TEST_F(HealthHandlerTest, HandlesEmptyMethod) {
   auto resp = h_.handle_request(req);
   EXPECT_EQ(resp->status_code, 400);
   EXPECT_EQ(resp->body, "Bad Request");
-
-  EXPECT_TRUE(log_contains("[ResponseMetrics]"));
-  EXPECT_TRUE(log_contains("code=400"));
-  EXPECT_TRUE(log_contains("path=/health"));
-  EXPECT_TRUE(log_contains("client=127.0.0.1"));
-  EXPECT_TRUE(log_contains("handler=HealthHandler"));
 }
 
 // test malformed request - invalid path
@@ -95,12 +77,6 @@ TEST_F(HealthHandlerTest, HandlesInvalidPath) {
   auto resp = h_.handle_request(req);
   EXPECT_EQ(resp->status_code, 404);
   EXPECT_EQ(resp->body, "Not Found");
-
-  EXPECT_TRUE(log_contains("[ResponseMetrics]"));
-  EXPECT_TRUE(log_contains("code=404"));
-  EXPECT_TRUE(log_contains("path=invalid_path"));
-  EXPECT_TRUE(log_contains("client=127.0.0.1"));
-  EXPECT_TRUE(log_contains("handler=HealthHandler"));
 }
 
 // test malformed request - missing headers
@@ -113,10 +89,4 @@ TEST_F(HealthHandlerTest, HandlesMissingHeaders) {
   auto resp = h_.handle_request(req);
   EXPECT_EQ(resp->status_code, 200); // Health handler should still work without headers
   EXPECT_EQ(resp->body, "OK");
-
-  EXPECT_TRUE(log_contains("[ResponseMetrics]"));
-  EXPECT_TRUE(log_contains("code=200"));
-  EXPECT_TRUE(log_contains("path=/health"));
-  EXPECT_TRUE(log_contains("client=127.0.0.1"));
-  EXPECT_TRUE(log_contains("handler=HealthHandler"));
 }
