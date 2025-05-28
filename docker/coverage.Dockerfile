@@ -7,7 +7,8 @@ COPY . /usr/src/project
 WORKDIR /usr/src/project/build
 
 # Configure, build, test, and print the coverage summary
-RUN mkdir build_coverage \
+RUN cd .. \
+    && mkdir build_coverage \
     && cd build_coverage \
     && cmake -DCMAKE_BUILD_TYPE=Coverage .. \
     && make coverage
