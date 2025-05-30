@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10.0)
 project(name-not-found-404)
 
+include(FetchContent)
+
 # enable coverage flags
 option(ENABLE_COVERAGE "Enable coverage flags" OFF)
 if(ENABLE_COVERAGE)
@@ -22,6 +24,21 @@ if (CMAKE_BUILD_TYPE STREQUAL "" AND "$ENV{DEVEL_SHELL}" STREQUAL "1")
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  message(STATUS "Debug build: Fetching nlohmann_json from GitHub")
+  FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG        v3.11.2
+  )
+  FetchContent_MakeAvailable(nlohmann_json)
+else()
+  # In Docker (non-Debug) we assume nlohmann_json is already installed via apt/yum
+  message(STATUS "Non-Debug build: finding nlohmann_json from system")
+  find_package(nlohmann_json 3.2.0 REQUIRED)
+  message(STATUS "nlohmann_json version: ${nlohmann_json_VERSION}")
+endif()
+
 # Output binaries to a sub directory "bin"
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -39,9 +56,7 @@ set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.50 REQUIRED COMPONENTS system filesystem log log_setup regex)
 message(STATUS "Boost version: ${Boost_VERSION}")
 
-# Enable nlohmann_json
-find_package(nlohmann_json 3.2.0 REQUIRED)
-message(STATUS "nlohmann_json version: ${nlohmann_json_VERSION}")
+
 
 include_directories(include)
 
