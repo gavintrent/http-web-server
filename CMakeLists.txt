@@ -64,6 +64,7 @@ add_library(static_handler_lib OBJECT src/static_handler.cc)
 add_library(api_handler_lib OBJECT src/api_handler.cc)
 add_library(health_handler_lib OBJECT src/health_handler.cc)
 add_library(sleep_handler_lib OBJECT src/sleep_handler.cc)
+add_library(logout_handler_lib OBJECT src/logout_handler.cc)
 
 #link dispatcher
 target_link_libraries(config_parser_lib dispatcher_lib)
@@ -97,6 +98,7 @@ target_link_libraries(api_handler_lib PUBLIC handler_registry
   disk_file_store_lib fake_file_store_lib nlohmann_json::nlohmann_json
 )
 target_link_libraries(health_handler_lib PUBLIC handler_registry)
+target_link_libraries(logout_handler_lib PUBLIC handler_registry)
 
 # executables go under here
 add_executable(server src/server_main.cc)
@@ -105,7 +107,7 @@ session_lib config_parser_lib echo_handler_lib not_found_handler_lib
 static_handler_lib request_parser_lib Boost::log_setup Boost::log 
 Boost::system Boost::regex api_handler_lib disk_file_store_lib 
 fake_file_store_lib nlohmann_json::nlohmann_json 
-  health_handler_lib sleep_handler_lib)
+health_handler_lib sleep_handler_lib logout_handler_lib)
 
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib 
@@ -174,6 +176,14 @@ target_link_libraries(health_handler_test
   Boost::log_setup
   Boost::system)
 
+add_executable(logout_handler_test tests/logout_handler_test.cc)
+target_link_libraries(logout_handler_test 
+  logout_handler_lib 
+  gtest_main
+  Boost::log
+  Boost::log_setup
+  Boost::system)
+
 # tests go under here
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(echo_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
@@ -185,6 +195,7 @@ gtest_discover_tests(server_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/t
 gtest_discover_tests(logger_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(api_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(health_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(logout_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 # Update with target/test targets
 include(cmake/CodeCoverageReportConfig.cmake)
@@ -202,6 +213,7 @@ generate_coverage_report(
     dispatcher_lib
     api_handler_lib
     health_handler_lib
+    logout_handler_lib
   TESTS 
     config_parser_test
     echo_handler_test
@@ -214,6 +226,7 @@ generate_coverage_report(
     dispatcher_test
     api_handler_test
     health_handler_test
+    logout_handler_test
   )
 
 # Bash integration test for the echo server
@@ -235,3 +248,6 @@ add_test(NAME HealthHandlerIntegrationTest
 
 add_test(NAME ConcurrentIntegrationTest
          COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/concurrent_integration_test.sh)
+
+add_test(NAME LogoutHandlerIntegrationTest
+         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/logout_handler_integration_test.sh)

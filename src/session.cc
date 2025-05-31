@@ -71,7 +71,12 @@ void session::handle_read(const boost::system::error_code& ec,
   // Build Beast response
   response.result((http::status)app_res->status_code);
   response.body() = std::move(app_res->body);
-  response.set(http::field::content_type, app_res->headers["Content-Type"]);
+  
+  // Set all headers from the response
+  for (const auto& header : app_res->headers) {
+    response.set(header.first, header.second);
+  }
+  
   response.prepare_payload();
 
   BOOST_LOG_TRIVIAL(debug) << "Sending response with status code: " << app_res->status_code;
