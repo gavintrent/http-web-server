@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include "session_context.h"
 
 struct HttpRequest {
   std::string method;
@@ -11,6 +12,7 @@ struct HttpRequest {
   std::string body;
   std::string raw;
   std::string client_ip;
+  SessionContext session_context;
 };
 
 struct HttpResponse {

@@ -65,6 +65,7 @@ add_library(server_main_lib src/server_main.cc)
 add_library(server_lib src/server.cc)
 add_library(handler_registry src/handler_registry.cc)
 add_library(session_lib src/session.cc)
+add_library(session_store_lib src/session_store.cc)
 add_library(config_parser_lib src/config_parser.cc)
 add_library(request_parser_lib src/request_parser.cc)
 add_library(logger_lib src/logger.cc)
@@ -80,6 +81,7 @@ add_library(api_handler_lib OBJECT src/api_handler.cc)
 add_library(health_handler_lib OBJECT src/health_handler.cc)
 add_library(sleep_handler_lib OBJECT src/sleep_handler.cc)
 add_library(logout_handler_lib OBJECT src/logout_handler.cc)
+add_library(session_middleware_handler_lib STATIC src/session_middleware_handler.cc)
 
 #link dispatcher
 target_link_libraries(config_parser_lib dispatcher_lib)
@@ -115,6 +117,17 @@ target_link_libraries(api_handler_lib PUBLIC handler_registry
 target_link_libraries(health_handler_lib PUBLIC handler_registry)
 target_link_libraries(logout_handler_lib PUBLIC handler_registry)
 
+target_link_libraries(session_middleware_handler_lib
+    PRIVATE
+      session_store_lib
+      handler_registry
+      Boost::log
+      Boost::log_setup
+      Boost::system
+      Boost::regex
+)
+target_link_libraries(session_store_lib Boost::log Boost::log_setup)
+
 # executables go under here
 add_executable(server src/server_main.cc)
 target_link_libraries(server logger_lib server_main_lib server_lib 
@@ -122,7 +135,7 @@ session_lib config_parser_lib echo_handler_lib not_found_handler_lib
 static_handler_lib request_parser_lib Boost::log_setup Boost::log 
 Boost::system Boost::regex api_handler_lib disk_file_store_lib 
 fake_file_store_lib nlohmann_json::nlohmann_json 
-health_handler_lib sleep_handler_lib logout_handler_lib)
+  health_handler_lib sleep_handler_lib session_store_lib logout_handler_lib)
 
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib 
@@ -199,6 +212,24 @@ target_link_libraries(logout_handler_test
   Boost::log_setup
   Boost::system)
 
+add_executable(session_middleware_handler_test tests/session_middleware_test.cc)
+target_link_libraries(session_middleware_handler_test
+    PRIVATE
+      session_middleware_handler_lib
+      gtest_main
+      gmock_main
+)
+
+
+add_executable(session_store_test tests/session_store_test.cc)
+target_link_libraries(session_store_test 
+    session_store_lib
+    gtest_main
+    Boost::log
+    Boost::log_setup
+    Boost::system
+)
+
 # tests go under here
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(echo_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
@@ -211,6 +242,8 @@ gtest_discover_tests(logger_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/t
 gtest_discover_tests(api_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(health_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(logout_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(session_middleware_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(session_store_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 # Update with target/test targets
 include(cmake/CodeCoverageReportConfig.cmake)
@@ -220,6 +253,7 @@ generate_coverage_report(
     server_main_lib
     server_lib 
     session_lib 
+    session_store_lib
     config_parser_lib 
     echo_handler_lib 
     not_found_handler_lib 
@@ -229,6 +263,7 @@ generate_coverage_report(
     api_handler_lib
     health_handler_lib
     logout_handler_lib
+    session_middleware_handler_lib
   TESTS 
     config_parser_test
     echo_handler_test
@@ -242,13 +277,14 @@ generate_coverage_report(
     api_handler_test
     health_handler_test
     logout_handler_test
+    session_middleware_handler_test
+    session_store_test
   )
 
-# Bash integration test for the echo server
+# integration tests
 add_test(NAME EchoServerIntegrationTest
          COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_test.sh)
 
-# Bash integration test for the echo server
 add_test(NAME StaticHandlerIntegrationTest
          COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/static_integration_test.sh)
 
