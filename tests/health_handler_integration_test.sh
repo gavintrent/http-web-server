@@ -40,6 +40,7 @@ if grep -q "HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
 else
   echo "FAIL: health did not return 200 OK"
   cat "$RESPONSE_FILE"
+  exit 1
 fi
 
 # Content-Type header
@@ -48,6 +49,7 @@ if grep -i -q "^Content-Type: text/plain" "$RESPONSE_FILE"; then
 else
   echo "FAIL: incorrect or missing Content-Type"
   cat "$RESPONSE_FILE"
+  exit 1
 fi
 
 # Body exactly "OK"
@@ -57,6 +59,7 @@ if [[ "$BODY" == "OK" ]]; then
 else
   echo "FAIL: body is not 'OK' (got: '$BODY')"
   cat "$RESPONSE_FILE"
+  exit 1
 fi
 
 echo "==== MALFORMED REQUEST ===="
@@ -74,6 +77,7 @@ if grep -q "HTTP/1.1 400 Bad Request" "$RESPONSE_FILE"; then
 else
   echo "FAIL: malformed request did not return 400"
   cat "$RESPONSE_FILE"
+  exit 1
 fi
 
 exit 0

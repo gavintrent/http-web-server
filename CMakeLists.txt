@@ -71,7 +71,8 @@ add_library(api_handler_lib OBJECT src/api_handler.cc)
 add_library(health_handler_lib OBJECT src/health_handler.cc)
 add_library(sleep_handler_lib OBJECT src/sleep_handler.cc)
 add_library(logout_handler_lib OBJECT src/logout_handler.cc)
-add_library(session_middleware_handler_lib STATIC src/session_middleware_handler.cc)
+add_library(session_middleware_handler_lib OBJECT src/session_middleware_handler.cc)
+add_library(get_messages_handler_lib OBJECT src/get_messages_handler.cc)
 add_library(register_handler_lib OBJECT src/register_handler.cc)
 add_library(login_handler_lib OBJECT src/login_handler.cc)
 
@@ -103,6 +104,28 @@ target_link_libraries(session_middleware_handler_lib
 target_link_libraries(session_store_lib Boost::log Boost::log_setup)
 target_link_libraries(login_handler_lib PUBLIC handler_registry nlohmann_json::nlohmann_json)
 
+target_link_libraries(get_messages_handler_lib
+  PUBLIC
+    handler_registry
+    disk_file_store_lib
+    nlohmann_json::nlohmann_json
+    Boost::log
+    Boost::log_setup
+    Boost::system
+    Boost::filesystem
+)
+
+target_link_libraries(get_messages_handler_lib
+  PUBLIC
+    handler_registry
+    disk_file_store_lib
+    nlohmann_json::nlohmann_json
+    Boost::log
+    Boost::log_setup
+    Boost::system
+    Boost::filesystem
+)
+
 # Main server executable
 add_executable(server src/server_main.cc)
 target_link_libraries(server logger_lib server_main_lib server_lib 
@@ -110,7 +133,7 @@ target_link_libraries(server logger_lib server_main_lib server_lib
   static_handler_lib request_parser_lib Boost::log_setup Boost::log 
   Boost::system Boost::regex api_handler_lib disk_file_store_lib 
   fake_file_store_lib nlohmann_json::nlohmann_json health_handler_lib 
-  sleep_handler_lib logout_handler_lib register_handler_lib login_handler_lib
+  sleep_handler_lib logout_handler_lib get_messages_handler_lib register_handler_lib login_handler_lib
   session_middleware_handler_lib)
 
 # Tests
@@ -168,6 +191,20 @@ target_link_libraries(session_store_test
     Boost::system
 )
 
+add_executable(get_messages_handler_test tests/get_messages_handler_test.cc)
+target_link_libraries(get_messages_handler_test
+  PRIVATE
+    get_messages_handler_lib
+    disk_file_store_lib
+    handler_registry
+    gtest_main
+    nlohmann_json::nlohmann_json
+    Boost::log
+    Boost::log_setup
+    Boost::system
+    Boost::filesystem
+)
+
 add_executable(register_handler_test tests/register_handler_test.cc)
 target_link_libraries(register_handler_test register_handler_lib request_parser_lib gtest_main Boost::log Boost::log_setup Boost::system nlohmann_json::nlohmann_json)
 
@@ -190,6 +227,7 @@ gtest_discover_tests(health_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURC
 gtest_discover_tests(logout_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(session_middleware_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(session_store_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(get_messages_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(register_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(login_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
@@ -212,6 +250,7 @@ generate_coverage_report(
     health_handler_lib
     logout_handler_lib
     session_middleware_handler_lib
+    get_messages_handler_lib
     register_handler_lib
     login_handler_lib
   TESTS 
@@ -229,6 +268,7 @@ generate_coverage_report(
     logout_handler_test
     session_middleware_handler_test
     session_store_test
+    get_messages_handler_test
     register_handler_test
     login_handler_test
   )
@@ -241,4 +281,8 @@ add_test(NAME APIHandlerIntegrationTest COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/test
 add_test(NAME HealthHandlerIntegrationTest COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/health_handler_integration_test.sh)
 add_test(NAME ConcurrentIntegrationTest COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/concurrent_integration_test.sh)
 add_test(NAME LogoutHandlerIntegrationTest COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/logout_handler_integration_test.sh)
+
+add_test(NAME GetMessagesHandlerIntegrationTest
+         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/get_messages_handler_integration_test.sh)
+
 add_test(NAME RegisterHandlerIntegrationTest COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/register_handler_integration_test.sh)
