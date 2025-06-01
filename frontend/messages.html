@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Message Board</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #messageBoard {
+            border: 1px solid #ccc;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .message .username {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .message .timestamp {
+            color: #7f8c8d;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .message .content {
+            margin-top: 5px;
+        }
+        #messageForm {
+            display: flex;
+            gap: 10px;
+        }
+        #messageInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        #logoutBtn {
+            background: #e74c3c;
+            margin-bottom: 20px;
+        }
+        #logoutBtn:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <button id="logoutBtn">Logout</button>
+    <h1>Message Board</h1>
+    
+    <div id="messageBoard"></div>
+    
+    <form id="messageForm">
+        <input type="text" id="messageInput" placeholder="Type your message..." required>
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        const messageBoard = document.getElementById('messageBoard');
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Function to format timestamp
+        function formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+
+        // Function to add a message to the board
+        function addMessageToBoard(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `
+                <span class="username">${message.username}</span>
+                <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
+                <div class="content">${message.text}</div>
+            `;
+            messageBoard.appendChild(messageDiv);
+            messageBoard.scrollTop = messageBoard.scrollHeight;
+        }
+
+        // Function to load messages
+        async function loadMessages() {
+            try {
+                const response = await fetch('http://localhost:8080/messages', {
+                    credentials: 'include'
+                });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/static1/index.html';
+                        return;
+                    }
+                    throw new Error('Failed to load messages');
+                }
+                const messages = await response.json();
+                messageBoard.innerHTML = '';
+                messages.forEach(addMessageToBoard);
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        // Handle message submission
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            try {
+                const response = await fetch('http://localhost:8080/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ text })
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/static1/index.html';
+                        return;
+                    }
+                    throw new Error('Failed to send message');
+                }
+
+                messageInput.value = '';
+                loadMessages(); // Reload messages to show the new one
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        });
+
+        // Handle logout
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('http://localhost:8080/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    window.location.href = '/static1/index.html';
+                }
+            } catch (error) {
+                console.error('Error logging out:', error);
+            }
+        });
+
+        // Load messages initially and set up periodic refresh
+        loadMessages();
+        setInterval(loadMessages, 5000); // Refresh every 5 seconds
+    </script>
+</body>
+</html> 

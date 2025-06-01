@@ -2,6 +2,46 @@
 <html>
 <head>
   <title>Login Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    form {
+      margin-bottom: 20px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    input {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    #output {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #f9f9f9;
+    }
+  </style>
 </head>
 <body>
   <h1>User Auth</h1>
@@ -54,7 +94,11 @@
         body: JSON.stringify({ username, password }),
       });
 
-      output.textContent = `Login: ${await res.text()}`;
+      if (res.ok) {
+        window.location.href = '/static1/messages.html';
+      } else {
+        output.textContent = `Login failed: ${await res.text()}`;
+      }
     });
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
