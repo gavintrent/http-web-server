@@ -73,6 +73,7 @@ add_library(sleep_handler_lib OBJECT src/sleep_handler.cc)
 add_library(logout_handler_lib OBJECT src/logout_handler.cc)
 add_library(session_middleware_handler_lib STATIC src/session_middleware_handler.cc)
 add_library(register_handler_lib OBJECT src/register_handler.cc)
+add_library(login_handler_lib OBJECT src/login_handler.cc)
 
 # Link dependencies
 
@@ -100,6 +101,7 @@ target_link_libraries(session_middleware_handler_lib
       Boost::regex
 )
 target_link_libraries(session_store_lib Boost::log Boost::log_setup)
+target_link_libraries(login_handler_lib PUBLIC handler_registry nlohmann_json::nlohmann_json)
 
 # Main server executable
 add_executable(server src/server_main.cc)
@@ -108,7 +110,8 @@ target_link_libraries(server logger_lib server_main_lib server_lib
   static_handler_lib request_parser_lib Boost::log_setup Boost::log 
   Boost::system Boost::regex api_handler_lib disk_file_store_lib 
   fake_file_store_lib nlohmann_json::nlohmann_json health_handler_lib 
-  sleep_handler_lib logout_handler_lib register_handler_lib)
+  sleep_handler_lib logout_handler_lib register_handler_lib login_handler_lib
+  session_middleware_handler_lib)
 
 # Tests
 add_executable(config_parser_test tests/config_parser_test.cc)
@@ -145,7 +148,7 @@ add_executable(health_handler_test tests/health_handler_test.cc)
 target_link_libraries(health_handler_test health_handler_lib gtest_main Boost::log Boost::log_setup Boost::system)
 
 add_executable(logout_handler_test tests/logout_handler_test.cc)
-target_link_libraries(logout_handler_test logout_handler_lib gtest_main Boost::log Boost::log_setup Boost::system)
+target_link_libraries(logout_handler_test logout_handler_lib session_middleware_handler_lib gtest_main Boost::log Boost::log_setup Boost::system)
 
 
 add_executable(session_middleware_handler_test tests/session_middleware_test.cc)
@@ -168,6 +171,9 @@ target_link_libraries(session_store_test
 add_executable(register_handler_test tests/register_handler_test.cc)
 target_link_libraries(register_handler_test register_handler_lib request_parser_lib gtest_main Boost::log Boost::log_setup Boost::system nlohmann_json::nlohmann_json)
 
+add_executable(login_handler_test tests/login_handler_test.cc)
+target_link_libraries(login_handler_test login_handler_lib request_parser_lib session_middleware_handler_lib gtest_main Boost::log Boost::log_setup Boost::system nlohmann_json::nlohmann_json)
+
 # tests go under here
 
 # gtest discovery
@@ -185,6 +191,7 @@ gtest_discover_tests(logout_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURC
 gtest_discover_tests(session_middleware_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(session_store_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(register_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(login_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 # Coverage config
 include(cmake/CodeCoverageReportConfig.cmake)
@@ -206,6 +213,7 @@ generate_coverage_report(
     logout_handler_lib
     session_middleware_handler_lib
     register_handler_lib
+    login_handler_lib
   TESTS 
     config_parser_test
     echo_handler_test
@@ -222,6 +230,7 @@ generate_coverage_report(
     session_middleware_handler_test
     session_store_test
     register_handler_test
+    login_handler_test
   )
 
 # Integration tests

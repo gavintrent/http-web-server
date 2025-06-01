@@ -1,6 +1,7 @@
 #include "logout_handler.h"
 #include "handler_registry.h"
 #include <boost/log/trivial.hpp>
+#include "session_middleware_handler.h"
 
 const std::string LogoutHandler::kName = "LogoutHandler";
 
@@ -20,6 +21,9 @@ static const bool logoutRegistered =
         .registerHandler(
             LogoutHandler::kName,
             [](auto const& args) {
-                return std::make_unique<LogoutHandler>(args.at(0));
+                auto realLogout = std::make_unique<LogoutHandler>(args.at(0));
+
+                // Wrapped in SessionMiddleware
+                return std::make_unique<SessionMiddlewareHandler>(std::move(realLogout));
             }
         );
