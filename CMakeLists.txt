@@ -62,6 +62,7 @@ add_library(logger_lib src/logger.cc)
 add_library(dispatcher_lib src/dispatcher.cc)
 add_library(disk_file_store_lib src/disk_file_store.cc)
 add_library(fake_file_store_lib src/fake_file_store.cc)
+add_library(message_store_lib src/message_store.cc)
 
 # Handler libraries
 add_library(echo_handler_lib OBJECT src/echo_handler.cc)
@@ -91,6 +92,10 @@ target_link_libraries(api_handler_lib PUBLIC handler_registry disk_file_store_li
 target_link_libraries(health_handler_lib PUBLIC handler_registry)
 target_link_libraries(logout_handler_lib PUBLIC handler_registry)
 target_link_libraries(register_handler_lib PUBLIC handler_registry nlohmann_json::nlohmann_json)
+target_link_libraries(message_store_lib PUBLIC
+  Boost::system
+  Boost::thread
+)
 
 target_link_libraries(session_middleware_handler_lib
     PRIVATE
@@ -134,7 +139,7 @@ target_link_libraries(server logger_lib server_main_lib server_lib
   Boost::system Boost::regex api_handler_lib disk_file_store_lib 
   fake_file_store_lib nlohmann_json::nlohmann_json health_handler_lib 
   sleep_handler_lib logout_handler_lib get_messages_handler_lib register_handler_lib login_handler_lib
-  session_middleware_handler_lib)
+  session_middleware_handler_lib message_store_lib)
 
 # Tests
 add_executable(config_parser_test tests/config_parser_test.cc)
