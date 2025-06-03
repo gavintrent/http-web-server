@@ -145,6 +145,9 @@ target_link_libraries(server logger_lib server_main_lib server_lib
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib logger_lib echo_handler_lib not_found_handler_lib static_handler_lib Boost::log Boost::log_setup Boost::system gtest_main)
 
+add_executable(message_store_test tests/message_store_test.cc)
+target_link_libraries(message_store_test message_store_lib pthread Boost::log Boost::log_setup Boost::system gtest_main)
+
 add_executable(not_found_handler_test tests/not_found_handler_test.cc)
 target_link_libraries(not_found_handler_test not_found_handler_lib gtest_main gmock_main)
 
@@ -220,6 +223,7 @@ target_link_libraries(login_handler_test login_handler_lib request_parser_lib se
 
 # gtest discovery
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(message_store_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(echo_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(not_found_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(static_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
