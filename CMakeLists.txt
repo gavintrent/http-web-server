@@ -262,6 +262,7 @@ generate_coverage_report(
     get_messages_handler_lib
     register_handler_lib
     login_handler_lib
+    message_store_lib
   TESTS 
     config_parser_test
     echo_handler_test
@@ -280,6 +281,7 @@ generate_coverage_report(
     get_messages_handler_test
     register_handler_test
     login_handler_test
+    message_store_test
   )
 
 # Integration tests
