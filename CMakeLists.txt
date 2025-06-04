@@ -84,7 +84,7 @@ add_library(post_message_handler_lib OBJECT src/post_message_handler.cc)
 target_link_libraries(config_parser_lib dispatcher_lib)
 target_link_libraries(session_lib dispatcher_lib)
 target_link_libraries(echo_handler_lib PUBLIC handler_registry Boost::log Boost::log_setup)
-target_link_libraries(post_message_handler_lib PUBLIC handler_registry nlohmann_json::nlohmann_json)
+target_link_libraries(post_message_handler_lib PUBLIC session_middleware_handler_lib handler_registry nlohmann_json::nlohmann_json)
 target_link_libraries(sleep_handler_lib PUBLIC handler_registry Boost::log Boost::log_setup)
 target_link_libraries(static_handler_lib PUBLIC handler_registry)
 target_link_libraries(not_found_handler_lib PUBLIC handler_registry)
@@ -146,6 +146,9 @@ target_link_libraries(server logger_lib server_main_lib server_lib
 # Tests
 add_executable(config_parser_test tests/config_parser_test.cc)
 target_link_libraries(config_parser_test config_parser_lib logger_lib echo_handler_lib not_found_handler_lib static_handler_lib Boost::log Boost::log_setup Boost::system gtest_main)
+
+add_executable(post_message_handler_test tests/post_message_handler_test.cc)
+target_link_libraries(post_message_handler_test post_message_handler_lib session_middleware_handler_lib message_store_lib pthread Boost::log Boost::log_setup Boost::system gtest_main gmock_main)
 
 add_executable(message_store_test tests/message_store_test.cc)
 target_link_libraries(message_store_test message_store_lib pthread Boost::log Boost::log_setup Boost::system gtest_main)
@@ -225,6 +228,7 @@ target_link_libraries(login_handler_test login_handler_lib request_parser_lib se
 
 # gtest discovery
 gtest_discover_tests(config_parser_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+gtest_discover_tests(post_message_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(message_store_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(echo_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 gtest_discover_tests(not_found_handler_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
@@ -265,6 +269,7 @@ generate_coverage_report(
     register_handler_lib
     login_handler_lib
     message_store_lib
+    post_message_handler_lib
   TESTS 
     config_parser_test
     echo_handler_test
@@ -284,6 +289,7 @@ generate_coverage_report(
     register_handler_test
     login_handler_test
     message_store_test
+    post_message_handler_test
   )
 
 # Integration tests
