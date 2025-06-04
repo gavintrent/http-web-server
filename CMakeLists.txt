@@ -76,6 +76,7 @@ add_library(session_middleware_handler_lib OBJECT src/session_middleware_handler
 add_library(get_messages_handler_lib OBJECT src/get_messages_handler.cc)
 add_library(register_handler_lib OBJECT src/register_handler.cc)
 add_library(login_handler_lib OBJECT src/login_handler.cc)
+add_library(post_message_handler_lib OBJECT src/post_message_handler.cc)
 
 # Link dependencies
 
@@ -83,6 +84,7 @@ add_library(login_handler_lib OBJECT src/login_handler.cc)
 target_link_libraries(config_parser_lib dispatcher_lib)
 target_link_libraries(session_lib dispatcher_lib)
 target_link_libraries(echo_handler_lib PUBLIC handler_registry Boost::log Boost::log_setup)
+target_link_libraries(post_message_handler_lib PUBLIC handler_registry nlohmann_json::nlohmann_json)
 target_link_libraries(sleep_handler_lib PUBLIC handler_registry Boost::log Boost::log_setup)
 target_link_libraries(static_handler_lib PUBLIC handler_registry)
 target_link_libraries(not_found_handler_lib PUBLIC handler_registry)
@@ -139,7 +141,7 @@ target_link_libraries(server logger_lib server_main_lib server_lib
   Boost::system Boost::regex api_handler_lib disk_file_store_lib 
   fake_file_store_lib nlohmann_json::nlohmann_json health_handler_lib 
   sleep_handler_lib logout_handler_lib get_messages_handler_lib register_handler_lib login_handler_lib
-  session_middleware_handler_lib message_store_lib)
+  session_middleware_handler_lib message_store_lib post_message_handler_lib)
 
 # Tests
 add_executable(config_parser_test tests/config_parser_test.cc)
