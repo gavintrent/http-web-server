@@ -20,6 +20,7 @@ FROM ubuntu:noble AS deploy
 COPY --from=builder /usr/src/project/build/bin/server .
 COPY --from=builder /usr/src/project/config/gcloud.config .
 COPY --from=builder /usr/src/project/static_files/ ./static_files/
+COPY --from=builder /usr/src/project/data/ ./data/
 
 # Expose some port(s)
 EXPOSE 80
