@@ -247,7 +247,7 @@
         async function loadMessages() {
             try {
                 console.log('Fetching messages...');
-                const response = await fetch('/messages/get', {
+                const response = await fetch('./messages/get', {
                     credentials: 'include'
                 });
                 console.log('Response status:', response.status);
@@ -281,7 +281,7 @@
         async function sendMessage(content) {
             try {
                 console.log('Sending message:', content);
-                const response = await fetch('/messages/post', {
+                const response = await fetch('./messages/post', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -314,7 +314,7 @@
 
         logoutBtn.addEventListener('click', async () => {
             try {
-                const response = await fetch('/logout', {
+                const response = await fetch('./logout', {
                     credentials: 'include'
                 });
                 if (response.ok) {
