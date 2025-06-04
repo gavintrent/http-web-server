@@ -26,4 +26,7 @@ struct FileStore {
 
     // Read the directory for entity, returning list of IDs or names.
     virtual std::optional<std::vector<int>> read_directory(const std::string& entity) = 0;
+
+    // Get the root directory path
+    virtual std::string get_root() const = 0;
 };

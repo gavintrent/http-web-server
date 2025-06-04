@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
+    }
+
+    .login-body {
+      /* overflow: hidden; */ /* Removed to enable scrolling */
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 600px;
+      width: 90%;
+      background: #fff;
+      padding: 32px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      transform: scale(0.8);
+      margin: auto;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        width: 95%;
+        padding: 30px;
+      }
+    }
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      width: 100%;
+      margin-top: 40px;
+    }
+
+    .text {
+      color: #2D68C4;
+      font-size: 38px;
+      font-weight: 700;
+    }
+
+    .underline {
+      width: 49px;
+      height: 5px;
+      background: #F2A900;
+      border-radius: 9px;
+    }
+
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    }
+
+    .logo-container img {
+      max-width: 200px; /* Adjust size as needed */
+      height: auto;
+      margin: 10px; /* Add some space between images */
+    }
+
+    .inputs {
+      margin-top: 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .input {
+      display: flex;
+      align-items: center;
+      margin: auto;
+      width: 384px;
+      height: 64px;
+      background: #eaeaea;
+      border-radius: 6px;
+    }
+
+    .input input {
+      height: 40px;
+      width: 320px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #797979;
+      font-size: 19px;
+      padding: 0 24px;
+    }
+
+    .submit-container {
+      display: flex;
+      gap: 24px;
+      margin: 10px auto;
+    }
+
+    .submit {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 176px;
+      height: 47px;
+      color: #fff;
+      background: #2D68C4;
+      border-radius: 40px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 72px;
+      border: none;
+      font-size: 16px;
+    }
+
+    .submit:hover {
+      background: #1d4d94;
+      transition: background 0.2s ease;
+    }
+
+    .submit.gray {
+      background: #F2A900;
+      color: #fff;
+    }
+
+    .submit.gray:hover {
+      background: #d99a00;
+      color: #fff;
+      transition: background 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    .error-message p {
+      color: #d8000c;
+      background-color: #ffbaba;
+      border: 1px solid #d8000c;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      text-align: center;
+      animation: fadeIn 0.3s ease-in-out, fadeOut 1s ease-out 5s forwards;
+      word-wrap: break-word;
+    }
+
+    .success-message p {
+      color: #2D68C4;
+      background-color: #e6f0ff;
+      border: 1px solid #2D68C4;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      text-align: center;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body class="login-body">
+  <div class="container">
+    <div class="logo-container">
+      <img src="/static1/UCLA_Bruins_script.svg.png" alt="UCLA Logo">
+    </div>
+
+    <div class="header">
+      <div class="text">Welcome</div>
+      <div class="underline"></div>
+    </div>
+
+    <form id="registerForm" class="inputs">
+      <div class="input">
+        <input type="text" id="regUsername" placeholder="Username" required>
+      </div>
+      <div class="input">
+        <input type="password" id="regPassword" placeholder="Password" required>
+      </div>
+      <div class="submit-container">
+        <button type="submit" class="submit">Register</button>
+      </div>
+    </form>
+
+    <form id="loginForm" class="inputs">
+      <div class="input">
+        <input type="text" id="loginUsername" placeholder="Username" required>
+      </div>
+      <div class="input">
+        <input type="password" id="loginPassword" placeholder="Password" required>
+      </div>
+      <div class="submit-container">
+        <button type="submit" class="submit gray">Login</button>
+      </div>
+    </form>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const output = document.getElementById('output');
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('regUsername').value;
+      const password = document.getElementById('regPassword').value;
+
+      try {
+        const res = await fetch('http://localhost:8080/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await res.text();
+        if (res.ok) {
+          output.innerHTML = `<div class="success-message"><p>Registration successful!</p></div>`;
+        } else {
+          output.innerHTML = `<div class="error-message"><p>${data}</p></div>`;
+        }
+      } catch (error) {
+        output.innerHTML = `<div class="error-message"><p>Error: ${error.message}</p></div>`;
+      }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        const res = await fetch('http://localhost:8080/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (res.ok) {
+          window.location.href = '/static1/messages.html';
+        } else {
+          const data = await res.text();
+          output.innerHTML = `<div class="error-message"><p>${data}</p></div>`;
+        }
+      } catch (error) {
+        output.innerHTML = `<div class="error-message"><p>Error: ${error.message}</p></div>`;
+      }
+    });
+  </script>
+</body>
+</html>

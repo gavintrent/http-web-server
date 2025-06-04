@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Message Board</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .message-board-body {
+            /* overflow: hidden; */ /* Removed to enable scrolling */
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px; /* Adjusted max-width for message board */
+            width: 90%;
+            background: #fff;
+            padding: 32px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin: 50px auto; /* Center container and add vertical margin */
+            position: relative; /* Changed from absolute */
+            transform: none; /* Removed scale transform */
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 30px;
+                margin: 20px auto; /* Adjust margin for smaller screens */
+            }
+        }
+
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 7px;
+            width: 100%;
+            margin-bottom: 20px; /* Adjusted margin */
+        }
+
+        .text {
+            color: #2D68C4;
+            font-size: 38px;
+            font-weight: 700;
+        }
+
+        .underline {
+            width: 49px;
+            height: 5px;
+            background: #F2A900;
+            border-radius: 9px;
+        }
+
+        #messageBoard {
+            border: 1px solid #ccc;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px; /* Keep margin */
+            background: #f9f9f9;
+            width: 100%; /* Make message board fill container */
+            box-sizing: border-box; /* Include padding and border in element's total width */
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .message .username {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .message .timestamp {
+            color: #7f8c8d;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .message .content {
+            margin-top: 5px;
+        }
+
+        .message .content div {
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px solid #eee;
+            position: relative;
+        }
+
+        .message .content div:first-child {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+
+        .message .content div .message-timestamp {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 0;
+            color: #7f8c8d;
+            font-size: 0.8em;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2px 5px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .message .content div:hover .message-timestamp {
+            display: inline-block;
+        }
+
+        #messageForm {
+            display: flex;
+            gap: 10px;
+            width: 100%; /* Make form fill container */
+        }
+
+        #messageInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px; /* Adjusted font size */
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #2D68C4; /* UCLA Blue */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #1d4d94; /* Darker UCLA Blue */
+        }
+
+        #logoutBtn {
+            background: #F2A900; /* UCLA Gold */
+            margin-top: 20px; /* Add margin at the top */
+            margin-bottom: 0; /* Remove margin at the bottom */
+            align-self: center; /* Center the button within the flex container */
+        }
+
+        #logoutBtn:hover {
+            background: #d99a00; /* Darker UCLA Gold */
+        }
+
+        .message-board-logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0px;
+            width: 50%;
+        }
+
+        .message-board-logo-container img {
+            max-width: 300px; /* Adjust size as needed */
+            height: auto;
+            transform: rotate(7deg); /* Initial clockwise rotation */
+        }
+
+    </style>
+</head>
+<body class="message-board-body">
+    <div class="container">
+        <div class="message-board-logo-container">
+            <img id="messageBoardImage" src="/static1/message_board_ucla2.png" alt="Message Board Text">
+        </div>
+
+        <div id="messageBoard"></div>
+
+        <form id="messageForm">
+            <input type="text" id="messageInput" placeholder="Type your message..." required>
+            <button type="submit">Send</button>
+        </form>
+
+        <button id="logoutBtn">Logout</button>
+    </div>
+
+    <script>
+        const messageBoard = document.getElementById('messageBoard');
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const messageBoardImage = document.getElementById('messageBoardImage');
+
+        // Function to format timestamp
+        function formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+
+        // Function to add a message to the board
+        function addMessageToBoard(message) {
+            console.log('Creating message element for:', message);
+            
+            // Check if the last message was from the same user
+            const lastMessage = messageBoard.lastElementChild;
+            if (lastMessage && lastMessage.querySelector('.username').textContent === message.username) {
+                // Append to existing message div
+                const contentDiv = lastMessage.querySelector('.content');
+                const newContent = document.createElement('div');
+                const timestamp = formatTimestamp(message.timestamp);
+                newContent.innerHTML = `
+                    ${message.content}
+                    <span class="message-timestamp">${timestamp}</span>
+                `;
+                contentDiv.appendChild(newContent);
+            } else {
+                // Create new message div
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                const timestamp = formatTimestamp(message.timestamp);
+                console.log('Formatted timestamp:', timestamp);
+                messageDiv.innerHTML = `
+                    <span class="username">${message.username}</span>
+                    <span class="timestamp">${timestamp}</span>
+                    <div class="content">
+                        <div>
+                            ${message.content}
+                            <span class="message-timestamp">${timestamp}</span>
+                        </div>
+                    </div>
+                `;
+                messageBoard.appendChild(messageDiv);
+            }
+            messageBoard.scrollTop = messageBoard.scrollHeight;
+            console.log('Message added to board');
+        }
+
+        // Function to load messages
+        async function loadMessages() {
+            try {
+                console.log('Fetching messages...');
+                const response = await fetch('/messages/get', {
+                    credentials: 'include'
+                });
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        console.log('Unauthorized, redirecting to login...');
+                        window.location.href = '/static1/index.html';
+                        return;
+                    }
+                    throw new Error('Failed to load messages');
+                }
+                const messages = await response.json();
+                console.log('Received messages:', messages);
+                messageBoard.innerHTML = ''; // Clear existing messages
+                if (Array.isArray(messages) && messages.length > 0) {
+                    messages.forEach(message => {
+                        console.log('Adding message:', message);
+                        addMessageToBoard(message);
+                    });
+                } else {
+                    console.log('No messages to display');
+                    messageBoard.innerHTML = '<div class="message">No messages yet. Be the first to post!</div>';
+                }
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                messageBoard.innerHTML = '<div class="message">Error loading messages. Please try again.</div>';
+            }
+        }
+
+        // Function to send a message
+        async function sendMessage(content) {
+            try {
+                console.log('Sending message:', content);
+                const response = await fetch('/messages/post', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ content })
+                });
+                console.log('Send response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+                const responseText = await response.text();
+                console.log('Send response:', responseText);
+                messageInput.value = ''; // Clear input
+                loadMessages(); // Reload messages to show the new one
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message. Please try again.');
+            }
+        }
+
+        // Event listeners
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = messageInput.value.trim();
+            if (content) {
+                await sendMessage(content);
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/logout', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    window.location.href = '/static1/index.html';
+                }
+            } catch (error) {
+                console.error('Error logging out:', error);
+            }
+        });
+
+        // Load messages initially and set up periodic refresh
+        loadMessages();
+        setInterval(loadMessages, 5000); // Refresh every 5 seconds
+    </script>
+</body>
+</html> 

@@ -45,3 +45,7 @@ bool FakeFileStore::remove(const std::string& entity, int id) {
     // Remove the entity and return true to indicate success
     return entity_map.erase(id) > 0;
 }
+
+std::string FakeFileStore::get_root() const {
+    return "fake_root";  // Since this is just for testing, return a dummy value
+}

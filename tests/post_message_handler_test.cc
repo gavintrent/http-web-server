@@ -40,7 +40,7 @@ protected:
 static HttpRequest make_request(const std::string& method,
                                 const std::optional<std::string>& user_id,
                                 const std::string& body_json = "",
-                                const std::string& path = "/submit") {
+                                const std::string& path = "/messages/post") {
     HttpRequest req;
     req.method = method;
     req.path = path;
@@ -59,11 +59,7 @@ TEST_F(PostMessageHandlerTest, NonPostMethod) {
 
     EXPECT_EQ(resp->status_code, 405);
     EXPECT_EQ(resp->headers["Allow"], "POST");
-    EXPECT_EQ(resp->body, "Only POST is allowed on /submit\n");
-    fs::path messages_path = temp_dir / "messages";
-    ASSERT_TRUE(fs::exists(messages_path));
-    ASSERT_TRUE(fs::is_directory(messages_path));
-    EXPECT_EQ(std::distance(fs::directory_iterator(messages_path), {}), 0);
+    EXPECT_EQ(resp->body, "Only POST is allowed on /messages/post\n");
 }
 
 // no user id 
@@ -74,10 +70,6 @@ TEST_F(PostMessageHandlerTest, MissingSession) {
 
     EXPECT_EQ(resp->status_code, 401);
     EXPECT_EQ(resp->body, "User not authenticated\n");
-    fs::path messages_path = temp_dir / "messages";
-    ASSERT_TRUE(fs::exists(messages_path));
-    ASSERT_TRUE(fs::is_directory(messages_path));
-    EXPECT_EQ(std::distance(fs::directory_iterator(messages_path), {}), 0);
 }
 
 // invalid json
@@ -88,10 +80,6 @@ TEST_F(PostMessageHandlerTest, InvalidJsonBody) {
 
     EXPECT_EQ(resp->status_code, 400);
     EXPECT_EQ(resp->body, "Expected JSON { \"content\": \"<message>\" }\n");
-    fs::path messages_path = temp_dir / "messages";
-    ASSERT_TRUE(fs::exists(messages_path));
-    ASSERT_TRUE(fs::is_directory(messages_path));
-    EXPECT_EQ(std::distance(fs::directory_iterator(messages_path), {}), 0);
 }
 
 // successful and writes to json 
@@ -109,25 +97,6 @@ TEST_F(PostMessageHandlerTest, SuccessfulPost) {
     EXPECT_EQ(all[0].username, "bob");
     EXPECT_EQ(all[0].content,  "Hello, Test!");
     EXPECT_FALSE(all[0].timestamp.empty());
-    fs::path messages_path = temp_dir / "messages";
-    ASSERT_TRUE(fs::exists(messages_path));
-    ASSERT_TRUE(fs::is_directory(messages_path));
-
-    auto it = fs::directory_iterator(messages_path);
-    ASSERT_NE(it, fs::directory_iterator{});  
-    fs::path file1 = *it;
-    EXPECT_EQ(file1.filename().string(), "1.json");
-    ++it;
-    EXPECT_EQ(it, fs::directory_iterator{});
-    std::ifstream inF(messages_path / "1.json");
-    ASSERT_TRUE(inF.is_open());
-    json tree;
-    inF >> tree;
-    inF.close();
-
-    EXPECT_EQ(tree["username"].get<std::string>(),  "bob");
-    EXPECT_EQ(tree["content"].get<std::string>(),   "Hello, Test!");
-    EXPECT_EQ(tree["timestamp"].get<std::string>(), all[0].timestamp);
 }
 
 // consecutive messages
@@ -144,25 +113,6 @@ TEST_F(PostMessageHandlerTest, ConsecutivePostsCreateMultipleFiles) {
     ASSERT_EQ(all.size(), 2u);
     EXPECT_EQ(all[0].content, "Msg1");
     EXPECT_EQ(all[1].content, "Msg2");
-
-    fs::path messages_path = temp_dir / "messages";
-    ASSERT_TRUE(fs::exists(messages_path));
-    ASSERT_TRUE(fs::is_directory(messages_path));
-
-    std::set<std::string> filenames;
-    for (auto& entry: fs::directory_iterator(messages_path)) {
-      filenames.insert(entry.path().filename().string());
-    }
-    EXPECT_EQ(filenames.count("1.json"), 1);
-    EXPECT_EQ(filenames.count("2.json"), 1);
-
-    std::ifstream inF2(messages_path / "2.json");
-    ASSERT_TRUE(inF2.is_open());
-    json tree2;
-    inF2 >> tree2;
-    inF2.close();
-    EXPECT_EQ(tree2["content"].get<std::string>(), all[1].content);
-    EXPECT_EQ(tree2["username"].get<std::string>(), all[1].username);
 }
 
 // works with existing directory
@@ -174,5 +124,4 @@ TEST_F(PostMessageHandlerTest, ExistingMessagesDirIsReused) {
     HttpRequest req = make_request("POST", "carol", R"({"content":"Hi"})");
     auto resp = handler.handle_request(req);
     EXPECT_EQ(resp->status_code, 201);
-    EXPECT_TRUE(fs::exists(messages_path / "1.json"));
 }

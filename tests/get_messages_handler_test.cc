@@ -42,17 +42,17 @@ protected:
         fs::path messages_dir = fs::path(temp_root) / "messages";
         fs::create_directories(messages_dir);
 
-        // create two files: <temp_root>/messages/1 and /messages/2
+        // create two files: <temp_root>/messages/1.json and /messages/2.json
         {
-            std::ofstream((messages_dir / "1").string()) << R"({"id":1,"text":"Hello"})";
-            std::ofstream((messages_dir / "2").string()) << R"({"id":2,"text":"World"})";
+            std::ofstream((messages_dir / "1.json").string()) << R"({"username":"alice","content":"Hello","timestamp":"2024-01-01T00:00:00Z"})";
+            std::ofstream((messages_dir / "2.json").string()) << R"({"username":"bob","content":"World","timestamp":"2024-01-01T00:00:01Z"})";
         }
 
         // build a config map with data_path
         auto config = makeConfigWithDataPath(data_path_str);
 
         // create the handler using the static factory
-        RequestHandler* raw_handler = GetMessagesHandler::Init("/messages", config);
+        RequestHandler* raw_handler = GetMessagesHandler::Init("/messages/get", config);
         ASSERT_NE(raw_handler, nullptr) << "GetMessagesHandler::Init failed";
         handler.reset(dynamic_cast<GetMessagesHandler*>(raw_handler));
         ASSERT_NE(handler, nullptr) << "dynamic_cast to GetMessagesHandler* failed";
@@ -65,11 +65,10 @@ protected:
     }
 };
 
-
 TEST_F(GetMessagesHandlerTest, ReturnsAllMessages) {
     HttpRequest req;
     req.method = "GET";
-    req.path   = "/messages";
+    req.path   = "/messages/get";
 
     auto resp = handler->handle_request(req);
     ASSERT_NE(resp, nullptr);
@@ -83,17 +82,17 @@ TEST_F(GetMessagesHandlerTest, ReturnsAllMessages) {
     ASSERT_TRUE(arr.is_array());
     EXPECT_EQ(arr.size(), 2u);
 
-    // collect (id, text) pairs in a set for comparison
-    std::set<std::pair<int, std::string>> seen;
+    // collect (username, content) pairs in a set for comparison
+    std::set<std::pair<std::string, std::string>> seen;
     for (auto& elem : arr) {
-        int id   = elem.at("id").get<int>();
-        std::string txt = elem.at("text").get<std::string>();
-        seen.insert({id, txt});
+        std::string username = elem.at("username").get<std::string>();
+        std::string content = elem.at("content").get<std::string>();
+        seen.insert({username, content});
     }
 
-    std::set<std::pair<int, std::string>> expected = {
-        {1, "Hello"},
-        {2, "World"}
+    std::set<std::pair<std::string, std::string>> expected = {
+        {"alice", "Hello"},
+        {"bob", "World"}
     };
     EXPECT_EQ(seen, expected);
 }
@@ -101,7 +100,7 @@ TEST_F(GetMessagesHandlerTest, ReturnsAllMessages) {
 TEST_F(GetMessagesHandlerTest, NonGetMethodNotAllowed) {
     HttpRequest req;
     req.method = "POST";
-    req.path   = "/messages";
+    req.path   = "/messages/get";
 
     auto resp = handler->handle_request(req);
     ASSERT_NE(resp, nullptr);
@@ -114,7 +113,7 @@ TEST_F(GetMessagesHandlerTest, NonGetMethodNotAllowed) {
 TEST_F(GetMessagesHandlerTest, WrongPathReturns404) {
     HttpRequest req;
     req.method = "GET";
-    req.path   = "/not-messages";  // anything other than "/messages"
+    req.path   = "/not-messages";  // anything other than "/messages/get"
 
     auto resp = handler->handle_request(req);
     ASSERT_NE(resp, nullptr);
@@ -124,14 +123,14 @@ TEST_F(GetMessagesHandlerTest, WrongPathReturns404) {
 
 TEST(GetMessagesHandlerNoInitTest, NoDataPathConfigsLeadsTo500) {
     std::map<std::string, std::string> empty_config;
-    RequestHandler* raw_handler = GetMessagesHandler::Init("/messages", empty_config);
+    RequestHandler* raw_handler = GetMessagesHandler::Init("/messages/get", empty_config);
     ASSERT_NE(raw_handler, nullptr) << "GetMessagesHandler::Init failed";
     auto handler = std::unique_ptr<GetMessagesHandler>(dynamic_cast<GetMessagesHandler*>(raw_handler));
     ASSERT_NE(handler, nullptr) << "dynamic_cast to GetMessagesHandler* failed";
 
     HttpRequest req;
     req.method = "GET";
-    req.path   = "/messages";
+    req.path   = "/messages/get";
 
     auto resp = handler->handle_request(req);
     ASSERT_NE(resp, nullptr);

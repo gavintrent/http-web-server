@@ -9,6 +9,8 @@
 #include <sstream>
 #include <filesystem>
 #include <fstream>
+#include <vector>
+#include <algorithm>
 
 using boost::property_tree::ptree;
 namespace fs = std::filesystem;
@@ -61,17 +63,35 @@ void MessageStore::load_from_file(const std::string& path) {
   if (!fs::exists(dir, ec) || !fs::is_directory(dir, ec)) {
     return;
   }
+
+  // Collect all files and sort them by numeric name
+  std::vector<std::pair<int, fs::path>> files;
   for (auto& entry : fs::directory_iterator(dir, ec)) {
     if (ec) {
       break;
     }
 
-    if (!entry.is_regular_file())
+    if (!entry.is_regular_file()) {
       continue;
+    }
 
-    std::ifstream inF(entry.path());
-    if (!inF.is_open())
+    try {
+      int idx = std::stoi(entry.path().stem().string());
+      files.emplace_back(idx, entry.path());
+    } catch (const std::exception&) {
       continue;
+    }
+  }
+
+  // Sort files by their numeric index
+  std::sort(files.begin(), files.end());
+
+  // Load messages in sorted order
+  for (const auto& [idx, filepath] : files) {
+    std::ifstream inF(filepath);
+    if (!inF.is_open()) {
+      continue;
+    }
 
     std::ostringstream buffer;
     buffer << inF.rdbuf();
@@ -118,7 +138,7 @@ void MessageStore::persist_to_file(const std::string& path) {
     }
   }
 
-  // Write each Message into a new file named “<idx>.json”
+  // Write each Message into a new file named "<idx>.json"
   int idx = 1;
   for (const auto& msg : messages_) {
     ptree tree;

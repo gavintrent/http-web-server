@@ -72,7 +72,7 @@ add_library(api_handler_lib OBJECT src/api_handler.cc)
 add_library(health_handler_lib OBJECT src/health_handler.cc)
 add_library(sleep_handler_lib OBJECT src/sleep_handler.cc)
 add_library(logout_handler_lib OBJECT src/logout_handler.cc)
-add_library(session_middleware_handler_lib OBJECT src/session_middleware_handler.cc)
+add_library(session_middleware_handler_lib src/session_middleware_handler.cc)
 add_library(get_messages_handler_lib OBJECT src/get_messages_handler.cc)
 add_library(register_handler_lib OBJECT src/register_handler.cc)
 add_library(login_handler_lib OBJECT src/login_handler.cc)
@@ -94,6 +94,7 @@ target_link_libraries(api_handler_lib PUBLIC handler_registry disk_file_store_li
 target_link_libraries(health_handler_lib PUBLIC handler_registry)
 target_link_libraries(logout_handler_lib PUBLIC handler_registry)
 target_link_libraries(register_handler_lib PUBLIC handler_registry nlohmann_json::nlohmann_json)
+target_link_libraries(post_message_handler_lib PUBLIC handler_registry nlohmann_json::nlohmann_json)
 target_link_libraries(message_store_lib PUBLIC
   Boost::system
   Boost::thread
@@ -120,17 +121,14 @@ target_link_libraries(get_messages_handler_lib
     Boost::log_setup
     Boost::system
     Boost::filesystem
+    session_middleware_handler_lib
 )
 
-target_link_libraries(get_messages_handler_lib
+target_link_libraries(post_message_handler_lib
   PUBLIC
     handler_registry
-    disk_file_store_lib
     nlohmann_json::nlohmann_json
-    Boost::log
-    Boost::log_setup
-    Boost::system
-    Boost::filesystem
+    session_middleware_handler_lib
 )
 
 # Main server executable

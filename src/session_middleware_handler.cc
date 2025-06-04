@@ -33,13 +33,13 @@ std::unique_ptr<HttpResponse> SessionMiddlewareHandler::handle_request(const Htt
         std::string user_id = response->body;
         std::string new_token = SessionStore::get_instance().create_session(user_id);
         
-        // add session cookie to response
-        response->headers["Set-Cookie"] = "session=" + new_token + "; HttpOnly; Path=/";
+        // add session cookie to response with domain
+        response->headers["Set-Cookie"] = "session=" + new_token + "; HttpOnly; Path=/; Domain=localhost";
     }
     // if this is a logout response, invalidate the session
     else if (request.path == "/logout" && session_token) {
         SessionStore::get_instance().invalidate_session(*session_token);
-        response->headers["Set-Cookie"] = "session=; HttpOnly; Path=/; Max-Age=0";
+        response->headers["Set-Cookie"] = "session=; HttpOnly; Path=/; Domain=localhost; Max-Age=0";
     }
 
     return response;

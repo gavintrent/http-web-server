@@ -10,6 +10,10 @@ namespace fs = std::filesystem;
 DiskFileStore::DiskFileStore(std::string root_dir)
     : root_(std::move(root_dir)) {}
 
+std::string DiskFileStore::get_root() const {
+    return root_;
+}
+
 int DiskFileStore::next_id(const std::string& entity) {
     fs::path dir = fs::path(root_) / entity;
     if (!fs::exists(dir)) return 0;

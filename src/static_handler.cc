@@ -34,6 +34,7 @@ std::unique_ptr<HttpResponse> StaticHandler::handle_request(const HttpRequest& r
     if      (ext == ".html") mime_type = "text/html";
     else if (ext == ".txt" ) mime_type = "text/plain";
     else if (ext == ".jpg" ) mime_type = "image/jpeg";
+    else if (ext == ".png" ) mime_type = "image/png";
     else if (ext == ".zip" ) mime_type = "application/zip";
     if (mime_type.empty()) {
         res->status_code = 404;
@@ -48,6 +49,10 @@ std::unique_ptr<HttpResponse> StaticHandler::handle_request(const HttpRequest& r
           if (file) {
               file_path = alt_path;
           }
+      }
+      // Try relative path if absolute path fails
+      if (!file) {
+          file.open(file_path, std::ios::in | std::ios::binary);
       }
       if (!file) {
         res->status_code = 404;

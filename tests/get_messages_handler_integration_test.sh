@@ -14,15 +14,15 @@ MESSAGES_DIR=$(mktemp -d)
 cat > "$CONFIG_FILE" <<EOF 
 port $PORT;
 
-location /messages GetMessagesHandler {
+location /messages/get GetMessagesHandler {
   data_path $MESSAGES_DIR;
 }
 EOF
 
 # Create test messages
 mkdir -p "$MESSAGES_DIR/messages"
-echo '{"id":1,"text":"Hello"}' > "$MESSAGES_DIR/messages/1"
-echo '{"id":2,"text":"World"}' > "$MESSAGES_DIR/messages/2"
+echo '{"username":"alice","content":"Hello","timestamp":"2024-01-01T00:00:00Z"}' > "$MESSAGES_DIR/messages/1.json"
+echo '{"username":"bob","content":"World","timestamp":"2024-01-01T00:00:01Z"}' > "$MESSAGES_DIR/messages/2.json"
 
 # Start server in background
 "$SERVER_EXEC" "$CONFIG_FILE" &
@@ -39,19 +39,19 @@ trap cleanup EXIT
 sleep 0.1
 
 ##############################################
-# 1) Test GET /messages → 200 OK + JSON array #
+# 1) Test GET /messages/get → 200 OK + JSON array #
 ##############################################
-echo "Testing GET /messages..."
-curl -s -i -S "http://localhost:$PORT/messages" \
+echo "Testing GET /messages/get..."
+curl -s -i -S "http://localhost:$PORT/messages/get" \
               -D "$RESPONSE_FILE" \
               -H "Content-Type: application/json" \
               -o "$OUTPUT_FILE"
 
 # (a) Check HTTP status line
 if grep -q "HTTP/1.1 200 OK" "$RESPONSE_FILE"; then
-    echo "GET /messages - Status 200 OK"
+    echo "GET /messages/get - Status 200 OK"
 else
-    echo "GET /messages - Expected 200 OK but got:"
+    echo "GET /messages/get - Expected 200 OK but got:"
     cat "$RESPONSE_FILE"
     echo "Full response body:"
     cat "$OUTPUT_FILE"
@@ -60,44 +60,44 @@ fi
 
 # (b) Check Content-Type header
 if grep -i -q "^Content-Type: application/json" "$RESPONSE_FILE"; then
-  echo "GET /messages - Content-Type: application/json"
+  echo "GET /messages/get - Content-Type: application/json"
 else
-  echo "GET /messages - Missing or incorrect Content-Type header"
+  echo "GET /messages/get - Missing or incorrect Content-Type header"
   cat "$RESPONSE_FILE"
   exit 1
 fi
 
 # (c) Check that response body contains both JSON objects
-if grep -q '"id":1' "$OUTPUT_FILE" && grep -q '"id":2' "$OUTPUT_FILE" && \
-   grep -q '"text":"Hello"' "$OUTPUT_FILE" && grep -q '"text":"World"' "$OUTPUT_FILE"; then
-  echo "GET /messages - Response body contains both messages."
+if grep -q '"username":"alice"' "$OUTPUT_FILE" && grep -q '"username":"bob"' "$OUTPUT_FILE" && \
+   grep -q '"content":"Hello"' "$OUTPUT_FILE" && grep -q '"content":"World"' "$OUTPUT_FILE"; then
+  echo "GET /messages/get - Response body contains both messages."
 else
-  echo "GET /messages - Response body is incorrect"
+  echo "GET /messages/get - Response body is incorrect"
   cat "$OUTPUT_FILE"
   exit 1
 fi
 
 ##############################################
-# 2) Test POST /messages → 405 Method Not Allowed #
+# 2) Test POST /messages/get → 405 Method Not Allowed #
 ##############################################
-echo "Testing POST /messages..."
-curl -s -i -S -X POST "http://localhost:$PORT/messages" \
+echo "Testing POST /messages/get..."
+curl -s -i -S -X POST "http://localhost:$PORT/messages/get" \
               -D "$RESPONSE_FILE" \
               -H "Content-Type: application/json" \
               -o "$OUTPUT_FILE"
 
 if grep -q "HTTP/1.1 405 Method Not Allowed" "$RESPONSE_FILE"; then
-  echo "POST /messages - Method Not Allowed (405) as expected."
+  echo "POST /messages/get - Method Not Allowed (405) as expected."
 else
-  echo "POST /messages - Expected 405 but got:"
+  echo "POST /messages/get - Expected 405 but got:"
   cat "$RESPONSE_FILE"
   exit 1
 fi
 
 if grep -i -q "^Allow: GET" "$RESPONSE_FILE"; then
-  echo "POST /messages - Allow: GET header is present"
+  echo "POST /messages/get - Allow: GET header is present"
 else
-  echo "POST /messages - Missing or incorrect Allow header"
+  echo "POST /messages/get - Missing or incorrect Allow header"
   cat "$RESPONSE_FILE"
   exit 1
 fi

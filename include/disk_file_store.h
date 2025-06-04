@@ -17,6 +17,8 @@ public:
   
   std::optional<std::vector<int>> read_directory(const std::string& entity) override;
   
+  std::string get_root() const override;
+  
 private:
   std::string root_;
 };

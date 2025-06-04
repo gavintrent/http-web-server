@@ -26,6 +26,7 @@ class FailWriteStore : public FileStore {
   bool remove(const std::string& entity, int id) override {
     return false;  // always fail
   }
+  std::string get_root() const override { return "fail_write_root"; }
 };
 
 // Extension of FailWriteStore that succeeds on read for testing delete functionality
@@ -34,6 +35,16 @@ class MockReadSuccessStore : public FailWriteStore {
   std::optional<std::string> read(const std::string& entity, int id) override {
     return R"({"test":"data"})";
   }
+  std::string get_root() const override { return "mock_read_root"; }
+};
+
+// A FileStore that always succeeds to read directory
+class MockReadDirectorySuccessStore : public FailWriteStore {
+public:
+    std::optional<std::vector<int>> read_directory(const std::string&) override {
+        return std::vector<int>{1, 2, 3};
+    }
+    std::string get_root() const override { return "mock_read_dir_root"; }
 };
 
 class ApiHandlerTest : public ::testing::Test {
