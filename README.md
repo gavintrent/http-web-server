@@ -43,6 +43,30 @@
 
   Manages reads and writes to the server. `handleRead` method passes received data into `request_parser` to convert it into an `HTTPRequest` object. If this succeeds, the request's URL is matched to a handler via the `dispatcher` and the request is passed to the matching handler.
 
+* login_handler.cc
+
+  Manages and registers user login. On success, generates and returns a session token.
+
+* logout_handler.cc
+
+  Manages user logout by  invalidating a session token passed via header or cookie.
+
+* session_store.cc
+  
+  Maintains an in-memory map of session_token → user_id.
+
+* get_messages_handler.cc
+
+  Handles request to get all current messages to be displayed.
+
+* message_store.cc
+
+  Defines methods to add new messages, get all messages and maintain a vector of all current messages. Additionally, loads and persists messages form/to a file.
+
+* post_message_handler.cc
+
+  Handles request to add new messages by user.
+
 ## Custom HTTP Message Types
 
 Our server uses 2 custom types to define HTTP requests and responses. These are defined in `http_types.h`.
