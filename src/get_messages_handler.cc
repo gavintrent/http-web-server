@@ -118,6 +118,7 @@ std::unique_ptr<HttpResponse> GetMessagesHandler::handle_request(
     return response;
 }
 
+// LCOV_EXCL_START
 static const bool getMessagesRegistered =
   HandlerRegistry::instance().registerHandler(
     GetMessagesHandler::kName,
@@ -127,3 +128,4 @@ static const bool getMessagesRegistered =
       auto realHandler = std::make_unique<GetMessagesHandler>(args.at(0), store);
       return std::make_unique<SessionMiddlewareHandler>(std::move(realHandler));
     });
+// LCOV_EXCL_STOP

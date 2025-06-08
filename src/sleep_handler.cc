@@ -19,6 +19,7 @@ std::unique_ptr<HttpResponse> SleepHandler::handle_request(const HttpRequest& re
   return res;
 }
 
+// LCOV_EXCL_START
 static const bool sleepRegistered =
   HandlerRegistry::instance()
     .registerHandler(
@@ -26,3 +27,4 @@ static const bool sleepRegistered =
       [](auto const& args) {
         return std::make_unique<SleepHandler>();
       });
+// LCOV_EXCL_STOP

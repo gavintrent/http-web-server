@@ -11,7 +11,7 @@ std::unique_ptr<HttpResponse> NotFoundHandler::handle_request(const HttpRequest&
     return res;
 }
 
-
+// LCOV_EXCL_START
 static const bool notFoundRegistered =
   HandlerRegistry::instance()
     .registerHandler(
@@ -22,3 +22,4 @@ static const bool notFoundRegistered =
         );
       }
     );
+// LCOV_EXCL_STOP

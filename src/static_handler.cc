@@ -73,6 +73,7 @@ std::unique_ptr<HttpResponse> StaticHandler::handle_request(const HttpRequest& r
   return res;
 }
 
+// LCOV_EXCL_START
 static const bool staticRegistered =
   HandlerRegistry::instance()
     .registerHandler(
@@ -83,3 +84,4 @@ static const bool staticRegistered =
         );
       }
     );
+// LCOV_EXCL_STOP

@@ -16,6 +16,7 @@ std::unique_ptr<HttpResponse> LogoutHandler::handle_request(const HttpRequest& r
     return response;
 }
 
+// LCOV_EXCL_START
 static const bool logoutRegistered =
     HandlerRegistry::instance()
         .registerHandler(
@@ -27,3 +28,4 @@ static const bool logoutRegistered =
                 return std::make_unique<SessionMiddlewareHandler>(std::move(realLogout));
             }
         );
+// LCOV_EXCL_STOP

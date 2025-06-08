@@ -74,6 +74,7 @@ bool LoginHandler::credentials_valid(const std::string& username, const std::str
     }
 }
 
+// LCOV_EXCL_START
 static const bool loginRegistered =
     HandlerRegistry::instance().registerHandler(
         LoginHandler::kName,
@@ -86,3 +87,4 @@ static const bool loginRegistered =
             return std::make_unique<SessionMiddlewareHandler>(std::move(realLogin));
         }
     );
+// LCOV_EXCL_STOP

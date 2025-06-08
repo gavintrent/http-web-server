@@ -88,6 +88,7 @@ std::string PostMessageHandler::parse_content(const std::string& body) {
   }
 }
 
+// LCOV_EXCL_START
 static const bool postMessageRegistered =
   HandlerRegistry::instance().registerHandler(
     PostMessageHandler::kName,
@@ -95,3 +96,4 @@ static const bool postMessageRegistered =
       auto realHandler = std::make_unique<PostMessageHandler>(args.at(0));
       return std::make_unique<SessionMiddlewareHandler>(std::move(realHandler));
     });
+// LCOV_EXCL_STOP

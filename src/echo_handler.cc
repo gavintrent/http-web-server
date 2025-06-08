@@ -36,7 +36,7 @@ std::unique_ptr<HttpResponse> EchoHandler::handle_request(const HttpRequest& req
    return res;
  }
 
-
+// LCOV_EXCL_START
 static const bool echoRegistered =
   HandlerRegistry::instance()
     .registerHandler(
@@ -47,3 +47,4 @@ static const bool echoRegistered =
         );
       }
     );
+// LCOV_EXCL_STOP

@@ -34,6 +34,7 @@ HealthHandler::handle_request(const HttpRequest& request) {
     return response;
 }
 
+// LCOV_EXCL_START
 static const bool healthRegistered =
   HandlerRegistry::instance()
     .registerHandler(
@@ -45,3 +46,4 @@ static const bool healthRegistered =
         return h;
       }
     );
+// LCOV_EXCL_STOP

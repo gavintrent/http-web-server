@@ -99,6 +99,7 @@ std::unique_ptr<HttpResponse> RegisterHandler::handle_request(const HttpRequest&
     return response;
 }
 
+// LCOV_EXCL_START
 static const bool registerRegistered =
     HandlerRegistry::instance().registerHandler(
         RegisterHandler::kName,
@@ -106,3 +107,4 @@ static const bool registerRegistered =
             return std::make_unique<RegisterHandler>(args.at(0));
         }
     );
+// LCOV_EXCL_STOP

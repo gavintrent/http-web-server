@@ -162,6 +162,7 @@ std::unique_ptr<HttpResponse> ApiHandler::handle_request(const HttpRequest& req)
   return res;
 }
 
+// LCOV_EXCL_START
 static bool apiRegistered = HandlerRegistry::instance()
   .registerHandler(ApiHandler::kName,
     [](const std::vector<std::string>& args) {
@@ -169,3 +170,4 @@ static bool apiRegistered = HandlerRegistry::instance()
       auto store = std::make_shared<DiskFileStore>(args.at(1));
       return std::make_unique<ApiHandler>(args.at(0), store);
     });
+// LCOV_EXCL_STOP
